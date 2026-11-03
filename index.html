@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12151d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kif-Kif">
+<title>Kif-Kif — apprends le darija</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151d;
+    --surface:#191d28;
+    --surface-2:#212635;
+    --surface-3:#2a3042;
+    --line:#2e3446;
+    --line-soft:#252a3a;
+    --brass:#d6b05c;
+    --brass-dim:#8f7a45;
+    --brass-soft:rgba(214,176,92,.12);
+    --teal:#2f9e92;
+    --teal-dim:#1e5f58;
+    --teal-soft:rgba(47,158,146,.14);
+    --red:#d2645d;
+    --green:#58ba84;
+    --green-soft:rgba(88,186,132,.12);
+    --text:#f3efe6;
+    --text-2:#c8cedb;
+    --muted:#8e96aa;
+    --radius:16px;
+    --side-w:300px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;}
+  button{font-family:inherit;color:inherit;}
+  a{color:var(--brass);}
+  .autonome .only-server{display:none !important;}
+  html:not(.autonome) .only-auto{display:none !important;}
+
+  #app{height:100vh;height:100dvh;display:flex;position:relative;overflow:hidden;max-width:1280px;margin:0 auto;border-left:1px solid var(--line-soft);border-right:1px solid var(--line-soft);}
+
+  /* ============ Colonne de gauche (en-tête sur téléphone) ============ */
+  #side{
+    width:var(--side-w);flex-shrink:0;display:flex;flex-direction:column;gap:22px;padding:24px 18px 18px;
+    background:
+      radial-gradient(circle at 0 0, rgba(214,176,92,.08), transparent 55%),
+      var(--surface);
+    border-right:1px solid var(--line);overflow-y:auto;
+  }
+  .side-top{display:flex;flex-direction:column;gap:22px;}
+  .brand{display:flex;align-items:center;gap:11px;}
+  .brand-logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#2a3042,#1b2030);border:1px solid var(--brass-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .brand-logo svg{width:24px;height:24px;}
+  .brand h1{font-family:'Cairo',sans-serif;font-weight:800;font-size:22px;margin:0;line-height:1.1;white-space:nowrap;}
+  .brand .sub{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .brand-text{min-width:0;}
+
+  .nav{display:flex;flex-direction:column;gap:4px;}
+  .nav-btn{
+    display:flex;align-items:center;gap:11px;width:100%;background:none;border:1px solid transparent;border-radius:12px;
+    padding:9px 11px;font-size:14px;font-weight:500;color:var(--text-2);cursor:pointer;text-align:left;
+  }
+  .nav-btn:hover{background:var(--surface-2);color:var(--text);}
+  .nav-btn:active{transform:scale(.98);}
+  .nav-btn .ic{width:22px;text-align:center;font-size:17px;flex-shrink:0;}
+  .nav-btn .lbl{flex:1;}
+  .badge{background:var(--brass);color:#1a1a1a;border-radius:20px;padding:1px 8px;font-size:11.5px;font-weight:700;}
+  .badge.zero{background:var(--surface-3);color:var(--muted);}
+  .nav-btn.on{color:var(--brass);}
+
+  .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:8px;}
+  .scene-box{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+  .scene-row{display:flex;gap:6px;align-items:center;}
+  .chip-btn{background:var(--surface-3);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:8px 11px;font-size:13.5px;cursor:pointer;white-space:nowrap;}
+  .chip-btn:hover{border-color:var(--brass-dim);}
+  .chip-btn:active{transform:scale(.97);}
+  #sceneBtn{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+  #objBtn{color:var(--brass);}
+  #objBtn.done{color:var(--green);border-color:var(--green);}
+  .obj-list{display:none;margin-top:10px;font-size:13.5px;}
+  .obj-list.open{display:block;}
+  .obj-item{display:flex;gap:8px;align-items:flex-start;padding:5px 0;color:var(--text-2);}
+  .obj-item .ck{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--line);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+  .obj-item.done{color:var(--green);}
+  .obj-item.done .ck{background:var(--green);border-color:var(--green);color:#10241a;}
+  .obj-tip{margin-top:8px;color:var(--muted);font-size:12.5px;line-height:1.5;}
+  .side-foot{margin-top:auto;font-size:12.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line);padding-top:14px;}
+  .side-foot b{color:var(--text);}
+
+  /* ============ Zone principale ============ */
+  #main{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;position:relative;background:var(--bg);}
+  #chat{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:28px max(18px, calc((100% - 780px) / 2)) 14px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth;}
+  .row{display:flex;flex-direction:column;max-width:86%;}
+  .row.user{align-self:flex-end;align-items:flex-end;}
+  .row.tutor{align-self:flex-start;flex-direction:row;gap:10px;align-items:flex-start;max-width:92%;}
+  .row.wide{align-self:stretch;max-width:100%;}
+  .avatar{width:32px;height:32px;border-radius:10px;flex-shrink:0;background:linear-gradient(145deg,var(--brass),#a8853d);color:#1d1a12;font-family:'Cairo',sans-serif;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;margin-top:2px;}
+  .tile-wrap{min-width:0;flex:1;}
+  .bubble{padding:11px 15px;}
+  .row.user .bubble{background:var(--teal-dim);border:1px solid rgba(47,158,146,.55);border-radius:18px 18px 5px 18px;color:var(--text);font-size:15px;white-space:pre-wrap;word-wrap:break-word;}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:5px 18px 18px 18px;padding:15px 17px;}
+
+  .lines{display:flex;flex-direction:column;gap:3px;}
+  .darija-lat{font-size:17px;font-weight:600;color:var(--brass);letter-spacing:.1px;}
+  .darija-ar{font-family:'Cairo',sans-serif;font-weight:700;font-size:20px;direction:rtl;text-align:right;color:var(--text-2);line-height:1.6;}
+  body.ar-first .darija-ar{order:-1;font-size:23px;color:var(--text);}
+  body.ar-first .darija-lat{font-size:14px;font-weight:500;font-style:italic;}
+  body.hide-lat .darija-lat.optional{display:none;}
+  body.hide-lat .darija-ar{color:var(--text);font-size:23px;}
+  .trad{font-size:14px;color:var(--text-2);margin-top:6px;}
+  .trad .fl{opacity:.75;margin-right:4px;}
+  .trad-btn{background:none;border:none;color:var(--muted);font-size:13px;padding:0;margin-top:6px;cursor:pointer;text-decoration:underline dotted;}
+  .actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;}
+  .note{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--brass-soft);font-size:13.5px;color:var(--text-2);line-height:1.55;}
+  .note b{color:var(--brass);}
+  .tile .plain-note{font-size:14px;color:var(--text-2);line-height:1.55;}
+  .model-tag{font-size:11.5px;color:var(--muted);margin-top:8px;}
+  .newwords{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  .newwords .nw-label{font-size:12px;color:var(--muted);margin-right:2px;}
+  .word-chip{background:var(--surface-2);border:1px solid var(--line);color:var(--text-2);font-size:12.5px;padding:4px 10px;border-radius:20px;cursor:pointer;}
+  .word-chip b{color:var(--brass);font-weight:600;}
+  .word-chip:hover{border-color:var(--brass-dim);}
+  .word-chip:active{transform:scale(.96);}
+  .box{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:13.5px;line-height:1.5;}
+  .box .label{font-size:12px;color:var(--muted);margin-bottom:3px;}
+  .box .ar{font-family:'Cairo',sans-serif;font-weight:700;font-size:17px;direction:rtl;text-align:right;}
+  .box .lat{color:var(--brass);font-weight:600;}
+  .row.user .box.user-trad{margin-top:6px;max-width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--teal);}
+  .row.user .box.user-trad.fix{border-left-color:var(--brass);}
+  .user-trad .lat{font-size:16.5px;}
+  .user-trad .ar{font-size:14px;opacity:.85;margin-top:3px;}
+  body.hide-user-ar .user-trad .ar{display:none;}
+  .box.suggestion{border:1px dashed var(--brass-dim);background:transparent;cursor:pointer;}
+  .box.suggestion:hover{border-color:var(--brass);background:var(--brass-soft);}
+  body.hide-sug .box.suggestion{display:none;}
+  .box.suggestion .sug-hint{display:none;color:var(--brass);font-weight:500;}
+  body.sug-ask .box.suggestion:not(.open){display:inline-block;padding:6px 12px;border-radius:20px;}
+  body.sug-ask .box.suggestion:not(.open) .sug-body{display:none;}
+  body.sug-ask .box.suggestion:not(.open) .sug-hint{display:block;}
+  .practice-result{font-size:13px;margin-top:6px;color:var(--text-2);}
+  .practice-result:empty{display:none;}
+  .practice-result .score{font-weight:700;}
+  .typing{display:flex;gap:5px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:5px 18px 18px 18px;}
+  .typing span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite;}
+  .typing span:nth-child(2){animation-delay:.2s;}
+  .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25;transform:translateY(0);}40%{opacity:1;transform:translateY(-3px);}}
+  .scene-card{background:linear-gradient(160deg,var(--surface-2),var(--surface));border:1px solid var(--brass-dim);border-radius:var(--radius);padding:16px 18px;font-size:14px;line-height:1.55;color:var(--text-2);}
+  .scene-card h3{margin:0 0 4px;font-family:'Cairo',sans-serif;font-size:19px;color:var(--text);}
+  .scene-card ul{margin:6px 0 0;padding-left:20px;}
+  .scene-card.success{border-color:var(--green);background:linear-gradient(160deg,rgba(88,186,132,.12),var(--surface));}
+  .scene-card .btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .retry-btn{margin-top:10px;}
+
+  /* Saisie */
+  #inputwrap{flex-shrink:0;padding:10px max(14px, calc((100% - 780px) / 2)) calc(14px + env(safe-area-inset-bottom));background:linear-gradient(180deg, transparent, var(--bg) 30%);}
+  #inputbar{display:flex;gap:8px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:7px;}
+  #inputbar:focus-within{border-color:var(--teal);}
+  #textInput{flex:1;background:transparent;border:none;padding:10px 6px;color:var(--text);font-size:16px;font-family:inherit;resize:none;outline:none;line-height:1.4;max-height:130px;}
+  #textInput::placeholder{color:var(--muted);}
+  .round-btn{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border:1px solid var(--line);background:var(--surface-2);font-size:18px;}
+  .round-btn:active{transform:scale(.94);}
+  #sendBtn{background:var(--teal);border-color:var(--teal);color:white;}
+  #sendBtn:disabled{opacity:.4;}
+  #micBtn{color:var(--brass);}
+  #micBtn.off{opacity:.45;}
+  #micBtn.recording{background:var(--red);border-color:var(--red);color:white;animation:pulse 1.1s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(210,100,93,.5);}70%{box-shadow:0 0 0 10px rgba(210,100,93,0);}100%{box-shadow:0 0 0 0 rgba(210,100,93,0);}}
+  #micLangBtn{width:auto;padding:0 10px;font-size:12.5px;font-weight:700;color:var(--text-2);}
+  .input-hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:6px;}
+
+  .listen-btn{display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--line);color:var(--text-2);font-size:13px;font-weight:600;padding:6px 12px;border-radius:20px;cursor:pointer;}
+  .listen-btn.primary{background:var(--brass-soft);border-color:var(--brass-dim);color:var(--brass);}
+  .listen-btn:hover{border-color:var(--brass-dim);}
+  .listen-btn:active{transform:scale(.96);}
+  .listen-btn.speaking{background:var(--teal-dim);border-color:var(--teal);color:var(--text);}
+  .listen-btn.small{padding:5px 10px;flex-shrink:0;}
+  .listen-btn.done{border-color:var(--green);color:var(--green);}
+  .voice-warning{font-size:12.5px;color:var(--red);text-align:center;padding:6px 20px 0;}
+  #toast{position:absolute;left:50%;bottom:110px;transform:translateX(-50%) translateY(10px);opacity:0;pointer-events:none;background:var(--surface-3);border:1px solid var(--green);color:var(--text);border-radius:12px;padding:10px 15px;font-size:13.5px;z-index:40;transition:all .25s ease;max-width:90%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #saveWarn{display:none;font-size:12px;color:var(--red);text-align:center;padding:6px 10px;background:var(--surface);border-bottom:1px solid var(--line);}
+
+  /* ============ Panneaux (carnet, révision, scènes, réglages) ============ */
+  #backdrop{position:absolute;inset:0;background:rgba(5,7,12,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:9;}
+  #backdrop.show{opacity:1;pointer-events:auto;}
+  .panel{position:absolute;top:0;bottom:0;right:0;width:min(480px,100%);background:var(--bg);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .28s ease, visibility .28s;display:flex;flex-direction:column;z-index:10;visibility:hidden;box-shadow:-20px 0 40px rgba(0,0,0,.35);}
+  .panel.open{transform:translateX(0);visibility:visible;}
+  .panel-head{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;padding-top:calc(18px + env(safe-area-inset-top));border-bottom:1px solid var(--line);background:var(--surface);}
+  .panel-head h2{font-family:'Cairo',sans-serif;font-weight:800;font-size:20px;margin:0;line-height:1.2;}
+  .panel-head .sub{font-size:12.5px;color:var(--muted);}
+  .panel-head .grow{flex:1;min-width:0;}
+  .close-btn{background:var(--surface-2);border:1px solid var(--line);color:var(--text-2);font-size:16px;cursor:pointer;width:36px;height:36px;border-radius:10px;}
+  .head-btn{background:var(--brass-soft);border:1px solid var(--brass-dim);color:var(--brass);font-weight:600;font-size:13px;padding:8px 12px;border-radius:10px;cursor:pointer;}
+  .panel-body{flex:1;overflow-y:auto;padding:16px 18px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;}
+  .tabs{display:flex;gap:6px;padding:12px 18px 0;flex-wrap:wrap;}
+  .tab{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:6px 13px;font-size:13px;cursor:pointer;}
+  .tab.active{color:#1a1a1a;background:var(--brass);border-color:var(--brass);font-weight:600;}
+  .vocab-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 12px;display:flex;align-items:center;gap:11px;}
+  .vocab-item .vmain{flex:1;min-width:0;}
+  .vocab-item .vl{font-size:15px;font-weight:600;color:var(--brass);}
+  .vocab-item .vw{font-family:'Cairo',sans-serif;font-weight:700;font-size:15px;color:var(--text-2);}
+  .vocab-item .vm{font-size:13.5px;color:var(--text);}
+  .vocab-item .badges{font-size:11.5px;color:var(--green);}
+  .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:6px;}
+  .del-btn:hover{color:var(--red);}
+  .add-form{display:none;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;gap:8px;flex-direction:column;}
+  .add-form.open{display:flex;}
+  .empty-state{text-align:center;color:var(--muted);font-size:14px;margin-top:40px;padding:0 24px;line-height:1.7;}
+  .empty-state .big{font-size:34px;display:block;margin-bottom:6px;}
+  .scene-choice{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px;cursor:pointer;display:flex;gap:13px;align-items:flex-start;}
+  .scene-choice:hover{border-color:var(--brass-dim);}
+  .scene-choice.current{border-color:var(--brass);background:var(--brass-soft);}
+  .scene-choice .em{font-size:26px;line-height:1;width:34px;text-align:center;}
+  .scene-choice .t{font-weight:600;font-size:15px;}
+  .scene-choice .r{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.45;}
+  .scene-choice .st{font-size:12.5px;margin-top:6px;color:var(--brass);font-weight:500;}
+  .lvl{font-size:11px;border:1px solid var(--line);border-radius:10px;padding:1px 7px;color:var(--muted);margin-left:6px;font-weight:500;}
+  .set-group{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:11px;font-size:14px;}
+  .set-group h4{margin:0;font-size:11.5px;color:var(--brass);text-transform:uppercase;letter-spacing:.8px;}
+  .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .set-row > span{flex:1;color:var(--text-2);}
+  .set-row select{width:54%;}
+  select, .field{background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 9px;font-size:14px;font-family:inherit;width:100%;}
+  .field{font-size:16px;}
+  .muted{color:var(--muted);font-size:13px;line-height:1.55;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  /* Révision */
+  .review-card{background:var(--surface);border:1px solid var(--brass-dim);border-radius:18px;padding:26px 18px;text-align:center;display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+  .review-card .q-label{font-size:13px;color:var(--muted);}
+  .review-card .big-ar{font-family:'Cairo',sans-serif;font-weight:800;font-size:28px;direction:rtl;}
+  .review-card .big-fr{font-size:21px;font-weight:600;}
+  .review-card .darija-lat{font-size:18px;}
+  .review-card .answer{border-top:1px dashed var(--line);padding-top:14px;display:flex;flex-direction:column;gap:6px;align-items:center;}
+  .review-btns{display:flex;gap:10px;justify-content:center;margin-top:6px;flex-wrap:wrap;}
+  .big-btn{border-radius:12px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--surface-2);color:var(--text);}
+  .big-btn.ok{border-color:var(--green);color:var(--green);}
+  .big-btn.ko{border-color:var(--red);color:var(--red);}
+  .big-btn.main{background:var(--teal);border-color:var(--teal);color:white;}
+  .progress{font-size:13px;color:var(--muted);text-align:center;}
+  .progress-bar{height:5px;background:var(--surface-2);border-radius:5px;overflow:hidden;margin-top:6px;}
+  .progress-bar div{height:100%;background:var(--brass);}
+
+  /* Carte de première utilisation (clé Groq sur iPhone) */
+  .setup-card{border-color:var(--teal);}
+  .setup-card ol{margin:8px 0;padding-left:20px;}
+  .setup-card .field{margin-top:8px;}
+
+  #chat::-webkit-scrollbar,.panel-body::-webkit-scrollbar,#side::-webkit-scrollbar{width:5px;}
+  #chat::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,#side::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;}
+
+  /* ============ Grand écran : objectifs toujours visibles ============ */
+  @media (min-width: 861px){
+    .obj-list{display:block;}
+    #objBtn{pointer-events:none;}
+  }
+
+  /* ============ Téléphone / fenêtre étroite ============ */
+  @media (max-width: 860px){
+    #app{flex-direction:column;border:none;}
+    #side{width:auto;gap:9px;padding:10px 12px 10px;padding-top:calc(10px + env(safe-area-inset-top));border-right:none;border-bottom:1px solid var(--line);overflow:visible;flex-shrink:0;}
+    .side-top{flex-direction:row;align-items:center;gap:8px;}
+    .brand{flex:1;min-width:0;gap:9px;}
+    .brand-logo{width:34px;height:34px;border-radius:10px;}
+    .brand-logo svg{width:20px;height:20px;}
+    .brand h1{font-size:19px;}
+    .brand .sub{font-size:11.5px;}
+    .nav{flex-direction:row;gap:5px;}
+    .nav-btn{width:auto;padding:7px 8px;gap:4px;background:var(--surface-2);border-color:var(--line);border-radius:11px;}
+    .nav-btn .lbl{display:none;}
+    .nav-btn .ic{width:auto;font-size:16px;}
+    .badge{padding:0 6px;font-size:10.5px;}
+    .section-label,.side-foot{display:none;}
+    .scene-box{padding:0;background:none;border:none;}
+    .chip-btn{padding:7px 10px;font-size:13px;}
+    .obj-list{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-top:8px;}
+    #chat{padding:16px 12px 10px;gap:14px;}
+    .row{max-width:92%;}
+    .row.tutor{max-width:100%;}
+    .avatar{display:none;}
+    #inputwrap{padding:8px 10px calc(10px + env(safe-area-inset-bottom));}
+    .input-hint{display:none;}
+    #toast{bottom:90px;}
+    .panel{width:100%;border-left:none;}
+  }
+  @media (max-width: 440px){
+    .brand .sub{display:none;}
+  }
+  @media (max-width: 380px){
+    .brand-logo{display:none;}
+    .nav-btn{padding:6px 6px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== Colonne de gauche / en-tête ===== -->
+  <aside id="side">
+    <div class="side-top">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2v2.5M8 4.5h8l-1.2 3H9.2L8 4.5z" stroke="#d6b05c" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M9 7.5h6v9a3 3 0 0 1-6 0v-9z" stroke="#d6b05c" stroke-width="1.4"/>
+            <path d="M9 10.5h6M9 13.5h6" stroke="#d6b05c" stroke-width="1.1"/>
+            <path d="M12 19.5V22M10 22h4" stroke="#d6b05c" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Kif-Kif</h1>
+          <div class="sub" id="headerSub">ta professeure de darija</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn" id="carnetBtn" onclick="openVocab()" title="Carnet de mots"><span class="ic">📓</span><span class="lbl">Mon carnet</span><span class="badge" id="vocabCount">0</span></button>
+        <button class="nav-btn" id="reviewBtn" onclick="openReview(false)" title="Réviser le carnet"><span class="ic">🃏</span><span class="lbl">Réviser</span><span class="badge" id="dueCount">0</span></button>
+        <button class="nav-btn" id="autoplayBtn" onclick="toggleAutoplay()" title="Lire chaque réponse automatiquement"><span class="ic">🔇</span><span class="lbl">Lecture auto : non</span></button>
+        <button class="nav-btn" id="speedBtn" onclick="cycleSpeed()" title="Vitesse de la voix"><span class="ic">🐢</span><span class="lbl">Voix : lente</span></button>
+        <button class="nav-btn" id="settingsBtn" onclick="openSettings()" title="Réglages"><span class="ic">⚙️</span><span class="lbl">Réglages</span></button>
+      </nav>
+    </div>
+
+    <div>
+      <div class="section-label">Scène en cours</div>
+      <div class="scene-box">
+        <div class="scene-row">
+          <button class="chip-btn" id="sceneBtn" onclick="openScenes()" title="Changer de scène"><span id="sceneLabel">💬 Conversation libre</span> ▾</button>
+          <button class="chip-btn" id="objBtn" onclick="toggleObjectives()" title="Objectifs de la scène">🎯 <span id="objCount">0/0</span></button>
+          <button class="chip-btn" id="newConvBtn" onclick="newConversation()" title="Recommencer la scène">↺</button>
+        </div>
+        <div class="obj-list" id="objList"></div>
+      </div>
+    </div>
+
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+
+  <!-- ===== Conversation ===== -->
+  <main id="main">
+    <div id="saveWarn">⚠️ Sauvegarde impossible pour l'instant (la fenêtre noire est-elle fermée ?). Tes changements sont gardés dans le navigateur.</div>
+    <div id="chat"></div>
+    <div id="toast"></div>
+    <div class="voice-warning" id="voiceWarning" style="display:none;"></div>
+    <div id="inputwrap">
+      <div id="inputbar">
+        <button class="round-btn" id="micBtn" onclick="toggleMic()" title="Parler (dictée)">🎤</button>
+        <button class="round-btn" id="micLangBtn" onclick="toggleMicLang()" title="Langue du micro">FR</button>
+        <textarea id="textInput" rows="1" placeholder="Écris en français ou en darija…"></textarea>
+        <button class="round-btn" id="sendBtn" onclick="sendMessage()" title="Envoyer (Entrée)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-2-8-8-2z" stroke="white" stroke-width="1.9" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Entrée pour envoyer · Maj+Entrée pour aller à la ligne · 🎤 pour dicter, puis relis avant d'envoyer</div>
+    </div>
+  </main>
+
+  <div id="backdrop" onclick="closeAllPanels()"></div>
+
+  <!-- Carnet -->
+  <div id="vocabPanel" class="panel">
+    <div class="panel-head">
+      <div class="grow"><h2>Mon carnet</h2><div class="sub">tes mots et tes phrases</div></div>
+      <button class="head-btn" onclick="toggleAddForm()" id="addWordBtn">＋ Ajouter</button>
+      <button class="close-btn" id="closeVocab" onclick="closePanel('vocabPanel')">✕</button>
+    </div>
+    <div class="tabs" id="vocabTabs">
+      <button class="tab active" data-f="tout" onclick="setVocabFilter('tout')">Tout</button>
+      <button class="tab" data-f="mot" onclick="setVocabFilter('mot')">Mots</button>
+      <button class="tab" data-f="phrase" onclick="setVocabFilter('phrase')">Phrases</button>
+      <button class="tab only-server" data-f="papa" onclick="setVocabFilter('papa')">Validés ✅</button>
+    </div>
+    <div class="panel-body">
+      <div class="add-form" id="addForm">
+        <input class="field" id="addAr" placeholder="En darija (arabe ou lettres latines)">
+        <input class="field" id="addLat" placeholder="En lettres latines (facultatif)">
+        <input class="field" id="addFr" placeholder="En français">
+        <button class="big-btn main" onclick="addManualWord()">Ajouter au carnet</button>
+      </div>
+      <div id="vocabList"></div>
+    </div>
+  </div>
+
+  <!-- Révision -->
+  <div id="reviewPanel" class="panel">
+    <div class="panel-head">
+      <div class="grow"><h2>Révision</h2><div class="sub">un peu chaque jour, c'est le secret</div></div>
+      <button class="close-btn" id="closeReview" onclick="closePanel('reviewPanel')">✕</button>
+    </div>
+    <div class="panel-body" id="reviewBody"></div>
+  </div>
+
+  <!-- Choix de scène -->
+  <div id="scenePanel" class="panel">
+    <div class="panel-head">
+      <div class="grow"><h2>Choisis une scène</h2><div class="sub">Kif-Kif joue un rôle, toi tu atteins les objectifs</div></div>
+      <button class="close-btn" id="closeScenes" onclick="closePanel('scenePanel')">✕</button>
+    </div>
+    <div class="panel-body" id="sceneList"></div>
+  </div>
+
+  <!-- Réglages -->
+  <div id="settingsPanel" class="panel">
+    <div class="panel-head">
+      <div class="grow"><h2>Réglages</h2><div class="sub">gardés sur cet appareil</div></div>
+      <button class="close-btn" id="closeSettings" onclick="closePanel('settingsPanel')">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="set-group only-auto">
+        <h4>Clé du tuteur (Groq)</h4>
+        <div class="muted">Gratuite : crée-la sur <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>, puis colle-la ici. Elle reste sur ce téléphone.</div>
+        <input class="field" id="keyInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="gsk_…">
+        <button class="big-btn main" onclick="saveKey($('keyInput').value)">Enregistrer la clé</button>
+        <div class="muted" id="keyInfo"></div>
+      </div>
+      <div class="set-group">
+        <h4>Progrès</h4>
+        <div class="muted" id="progressInfo"></div>
+      </div>
+      <div class="set-group">
+        <h4>Apprentissage</h4>
+        <div class="set-row"><span>Niveau</span>
+          <select id="levelSel">
+            <option value="debutant">Débutant</option>
+            <option value="intermediaire">Intermédiaire</option>
+            <option value="avance">Avancé</option>
+          </select></div>
+        <div class="set-row"><span>Écriture en premier</span>
+          <select id="scriptSel">
+            <option value="lat">Phonétique (lettres latines)</option>
+            <option value="ar">Écriture arabe</option>
+          </select></div>
+        <div class="set-row"><span>Traduction française</span>
+          <select id="tradSel">
+            <option value="show">Toujours visible</option>
+            <option value="hide">Cachée (toucher pour voir)</option>
+          </select></div>
+        <div class="set-row"><span>Lettres latines</span>
+          <select id="latSel">
+            <option value="show">Visibles</option>
+            <option value="hide">Cachées</option>
+          </select></div>
+        <div class="set-row"><span>« Tu peux répondre… »</span>
+          <select id="sugSel">
+            <option value="ask">Sur demande (bouton « indice »)</option>
+            <option value="show">Toujours visible</option>
+            <option value="hide">Caché</option>
+          </select></div>
+        <div class="set-row"><span>Ta phrase traduite en darija</span>
+          <select id="userArSel">
+            <option value="hide">Phonétique seulement</option>
+            <option value="show">Phonétique + écriture arabe</option>
+          </select></div>
+        <div class="set-row"><span>Remplir avec la suggestion en</span>
+          <select id="sugFillSel">
+            <option value="lat">Lettres latines</option>
+            <option value="ar">Arabe</option>
+          </select></div>
+      </div>
+      <div class="set-group">
+        <h4>Voix et micro</h4>
+        <div class="set-row"><span>Voix</span>
+          <select id="voiceSel">
+            <option value="jamal" class="srv-voice">Jamal (homme, marocain)</option>
+            <option value="mouna" class="srv-voice">Mouna (femme, marocaine)</option>
+          </select></div>
+        <div class="muted only-auto" id="voiceInfo">Sur iPhone, Kif-Kif utilise une voix arabe de ton téléphone (pas forcément marocaine).</div>
+        <div class="set-row"><span>Vitesse</span>
+          <select id="rateSel">
+            <option value="0">Normale</option>
+            <option value="-15">Lente</option>
+            <option value="-30">Très lente</option>
+          </select></div>
+        <div class="set-row"><span>Micro en</span>
+          <select id="micLang">
+            <option value="fr-FR">Français</option>
+            <option value="ar-MA">Darija</option>
+          </select></div>
+        <div class="set-row"><span>Après la dictée</span>
+          <select id="micAuto">
+            <option value="0">Me laisser relire</option>
+            <option value="1">Envoyer tout de suite</option>
+          </select></div>
+        <div class="set-row only-server"><span>Voix de papa en priorité (si enregistrée)</span>
+          <select id="papaSel">
+            <option value="1">Oui</option>
+            <option value="0">Non</option>
+          </select></div>
+        <div class="muted only-server" id="papaInfo">Aucun enregistrement de papa pour l'instant.</div>
+      </div>
+      <div class="set-group">
+        <h4>Tuteur</h4>
+        <div class="set-row"><span>Modèle</span><select id="modelSel"><option value="">(chargement…)</option></select></div>
+        <div class="muted" id="usageInfo"></div>
+        <div class="muted only-server"><a href="/comparer.html" target="_blank">Comparer les modèles →</a> (pour choisir celui qui parle le mieux darija)</div>
+      </div>
+      <div class="set-group only-server">
+        <h4>Papa</h4>
+        <div class="muted"><a href="/relecture.html" target="_blank">Page de relecture pour papa →</a><br>Il y valide ou corrige les phrases du tuteur et peut enregistrer sa voix. Ses corrections sont ensuite apprises par le tuteur.</div>
+      </div>
+      <div class="set-group">
+        <h4>Sauvegarde</h4>
+        <div class="muted only-server">Ton carnet et tes conversations sont enregistrés dans le dossier <b>donnees</b> de Kif-Kif (partagés entre Edge et Chrome).</div>
+        <div class="muted only-auto">Ton carnet est gardé sur ce téléphone. Télécharge une copie de temps en temps : tu peux aussi la « Restaurer » sur le PC (et inversement) pour retrouver tes mots des deux côtés.</div>
+        <div class="btn-row">
+          <button class="big-btn" onclick="downloadBackup()">📥 Télécharger une copie</button>
+          <button class="big-btn" onclick="$('restoreInput').click()">📤 Restaurer / fusionner</button>
+          <input type="file" id="restoreInput" accept=".json,application/json" style="display:none" onchange="restoreBackup(this)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="application/json" id="embeddedScenarios">{"_aide": "Scénarios de Kif-Kif. Tu peux modifier ce fichier avec le Bloc-notes (garde bien les guillemets et les virgules). 'role' = consigne donnée au tuteur, 'objectifs' = ce que tu dois réussir à dire. Les changements sont pris en compte sans relancer.", "scenarios": [{"id": "libre", "emoji": "💬", "titre": "Conversation libre", "resume": "On discute de tout et de rien : ta journée, ton travail, tes goûts.", "niveau_conseille": "debutant", "role": "Conversation libre. Discute de la vie quotidienne de l'utilisateur (sa journée, son travail, sa famille, ce qu'il aime). Pose une seule question simple à la fois.", "astuce_fr": "", "objectifs": []}, {"id": "presentations", "emoji": "👋", "titre": "Se présenter", "resume": "Tu rencontres une cousine pour la première fois à une fête de famille.", "niveau_conseille": "debutant", "role": "Tu joues Salma, une cousine de l'utilisateur qu'il rencontre pour la première fois lors d'une fête de famille au Maroc. Tu es curieuse et souriante. Tu poses des questions très simples sur lui.", "astuce_fr": "Au Maroc, les salutations sont longues : on demande des nouvelles de la santé, de la famille… c'est normal de répondre à plusieurs questions d'affilée.", "objectifs": [{"id": "saluer", "fr": "Dire bonjour et demander comment ça va"}, {"id": "prenom", "fr": "Dire ton prénom et demander le sien"}, {"id": "habiter", "fr": "Dire où tu habites"}, {"id": "travail", "fr": "Dire quel est ton travail"}, {"id": "au_revoir", "fr": "Dire au revoir poliment"}]}, {"id": "nombres", "emoji": "🔢", "titre": "Les nombres et l'argent", "resume": "Un petit jeu pour apprendre à compter, dire ton âge et comprendre un prix.", "niveau_conseille": "debutant", "role": "Tu es la professeure et tu proposes un petit jeu sur les nombres : faire compter l'utilisateur, lui demander son âge, puis lui annoncer des prix simples en dirhams qu'il doit comprendre. Avance très progressivement, un nombre ou deux à la fois.", "astuce_fr": "Beaucoup de Marocains annoncent les prix en « rials » : 1 dirham = 20 rials. Si on te dit un prix énorme, c'est peut-être en rials !", "objectifs": [{"id": "compter", "fr": "Compter de un à cinq"}, {"id": "compter_plus", "fr": "Continuer jusqu'à dix"}, {"id": "age", "fr": "Dire ton âge"}, {"id": "prix", "fr": "Comprendre un prix en dirhams et le répéter"}, {"id": "rials", "fr": "Découvrir comment on compte en rials"}]}, {"id": "famille", "emoji": "🍲", "titre": "Repas en famille", "resume": "Ta tante t'accueille pour le repas et insiste pour que tu manges encore.", "niveau_conseille": "debutant", "role": "Tu joues la tante de l'utilisateur (sa khalti), très accueillante, qui l'invite à manger un tajine. Tu prends des nouvelles de toute la famille et tu insistes gentiment pour qu'il reprenne à manger, comme le veut la tradition.", "astuce_fr": "Dans une famille marocaine, on insiste souvent pour que tu reprennes à manger : il faut parfois refuser plusieurs fois, poliment !", "objectifs": [{"id": "saluer", "fr": "Saluer ta tante et prendre des nouvelles"}, {"id": "famille", "fr": "Donner des nouvelles de ta famille (parents, frères et sœurs)"}, {"id": "compliment", "fr": "Dire que le repas est délicieux"}, {"id": "refuser", "fr": "Refuser poliment de reprendre à manger"}, {"id": "remercier", "fr": "Remercier pour le repas"}]}, {"id": "cafe", "emoji": "☕", "titre": "Au café", "resume": "Tu commandes à boire dans un café de quartier.", "niveau_conseille": "debutant", "role": "Tu joues le serveur d'un café de quartier au Maroc, sympathique et pressé. Tu proposes thé à la menthe, café noir, café au lait (nss-nss) et jus d'orange.", "astuce_fr": "Le « nss-nss » (moitié-moitié) est un café au lait servi dans un petit verre, très populaire au Maroc.", "objectifs": [{"id": "saluer", "fr": "Saluer le serveur"}, {"id": "commander", "fr": "Commander une boisson"}, {"id": "sucre", "fr": "Préciser avec ou sans sucre"}, {"id": "addition", "fr": "Demander combien tu dois payer"}, {"id": "remercier", "fr": "Remercier et dire au revoir"}]}, {"id": "hanout", "emoji": "🏪", "titre": "Chez l'épicier (hanout)", "resume": "Tu fais quelques courses dans la petite épicerie du quartier.", "niveau_conseille": "debutant", "role": "Tu joues le patron d'un hanout (petite épicerie de quartier). Tu vends du pain, du lait, des œufs, de l'huile, du sucre, du thé. Tu es bavard et tu aimes bien plaisanter avec les clients.", "astuce_fr": "Au hanout, on demande souvent « tu as… ? » plutôt que de chercher soi-même dans les rayons : c'est l'épicier qui sert.", "objectifs": [{"id": "demander", "fr": "Demander s'il a un produit"}, {"id": "quantite", "fr": "Dire la quantité que tu veux"}, {"id": "autre", "fr": "Demander un autre produit"}, {"id": "prix", "fr": "Demander combien ça fait"}, {"id": "remercier", "fr": "Payer et remercier"}]}, {"id": "souk", "emoji": "🧺", "titre": "Au souk", "resume": "Tu achètes des fruits et légumes et tu négocies le prix.", "niveau_conseille": "intermediaire", "role": "Tu joues un marchand de fruits et légumes au souk, malin et drôle. Tu annonces d'abord un prix un peu trop élevé et tu acceptes de baisser si l'utilisateur négocie. Tu vends tomates, pommes de terre, oignons, oranges, bananes.", "astuce_fr": "Au souk, négocier est normal et fait partie du jeu. Reste souriant : on finit souvent par se mettre d'accord au milieu.", "objectifs": [{"id": "saluer", "fr": "Saluer le marchand"}, {"id": "prix", "fr": "Demander le prix d'un fruit ou d'un légume"}, {"id": "cher", "fr": "Dire que c'est cher"}, {"id": "negocier", "fr": "Proposer un autre prix"}, {"id": "quantite", "fr": "Demander un kilo ou un demi-kilo"}, {"id": "payer", "fr": "Payer et remercier"}]}, {"id": "taxi", "emoji": "🚕", "titre": "En petit taxi", "resume": "Tu prends un petit taxi en ville et tu guides le chauffeur.", "niveau_conseille": "intermediaire", "role": "Tu joues un chauffeur de petit taxi à Casablanca, bavard, qui parle du trafic et du football. Tu demandes où aller, tu proposes un trajet, tu demandes des précisions sur la route.", "astuce_fr": "Le petit taxi roule en ville avec un compteur ; le grand taxi va d'une ville à l'autre et se partage entre plusieurs passagers.", "objectifs": [{"id": "destination", "fr": "Dire où tu veux aller"}, {"id": "compteur", "fr": "Demander le prix ou de mettre le compteur"}, {"id": "direction", "fr": "Donner une direction (à droite, à gauche, tout droit)"}, {"id": "arreter", "fr": "Demander de s'arrêter ici"}, {"id": "payer", "fr": "Payer et dire au revoir"}]}, {"id": "chemin", "emoji": "🗺️", "titre": "Demander son chemin", "resume": "Tu es perdu dans la médina et tu demandes ton chemin à un passant.", "niveau_conseille": "intermediaire", "role": "Tu joues un passant serviable dans la médina. L'utilisateur cherche un lieu (la mosquée, la gare, la pharmacie, un café). Tu donnes des indications simples avec des repères (tout droit, à droite, à gauche, après, à côté de).", "astuce_fr": "Dans la médina, on donne les directions avec des repères (« après la boulangerie, à côté de la mosquée ») plutôt qu'avec des noms de rues.", "objectifs": [{"id": "interpeller", "fr": "Interpeller poliment le passant"}, {"id": "demander", "fr": "Demander où se trouve un lieu"}, {"id": "comprendre", "fr": "Répéter les indications pour vérifier"}, {"id": "distance", "fr": "Demander si c'est loin"}, {"id": "remercier", "fr": "Remercier"}]}, {"id": "pharmacie", "emoji": "💊", "titre": "À la pharmacie", "resume": "Tu as mal à la tête et tu demandes conseil au pharmacien.", "niveau_conseille": "intermediaire", "role": "Tu joues une pharmacienne attentive. L'utilisateur a un petit problème de santé sans gravité (mal de tête, rhume, mal au ventre). Tu poses des questions simples et tu expliques comment prendre le médicament. Reste sur des conseils généraux et simples.", "astuce_fr": "Au Maroc, on demande souvent conseil directement au pharmacien pour les petits soucis du quotidien.", "objectifs": [{"id": "saluer", "fr": "Saluer et dire que tu as besoin d'aide"}, {"id": "symptome", "fr": "Dire où tu as mal"}, {"id": "depuis", "fr": "Dire depuis quand"}, {"id": "posologie", "fr": "Comprendre combien de fois par jour le prendre"}, {"id": "payer", "fr": "Demander le prix et remercier"}]}, {"id": "telephone", "emoji": "📞", "titre": "Appeler la famille au bled", "resume": "Tu appelles ta famille au Maroc pour prendre des nouvelles et annoncer ta visite.", "niveau_conseille": "avance", "role": "Tu joues la grand-mère de l'utilisateur, au Maroc, très contente qu'il appelle. Tu fais de longues salutations, tu demandes des nouvelles de tout le monde, tu veux savoir quand il vient et ce qu'il veut manger quand il arrivera.", "astuce_fr": "Au téléphone avec la famille, les salutations et les bénédictions peuvent durer longtemps : c'est une marque d'affection.", "objectifs": [{"id": "saluer", "fr": "Saluer et prendre des nouvelles de sa santé"}, {"id": "nouvelles", "fr": "Donner des nouvelles de toi et de tes parents"}, {"id": "visite", "fr": "Annoncer quand tu viens au Maroc"}, {"id": "besoin", "fr": "Demander si elle a besoin de quelque chose"}, {"id": "au_revoir", "fr": "Lui dire au revoir chaleureusement"}]}]}</script>
+<script>
+/* =====================================================================
+   Kif-Kif v4 — même fichier pour le PC (serveur Python) et l'iPhone (autonome)
+   ===================================================================== */
+// Sur le PC, la page est servie en http par server.py. En https (page hébergée pour l'iPhone),
+// ou avec ?autonome, Kif-Kif fonctionne seul : appel direct à Groq, voix et données du téléphone.
+const AUTONOME = location.protocol === 'https:' || location.protocol === 'file:' || /[?&]autonome\b/.test(location.search);
+if(AUTONOME) document.documentElement.classList.add('autonome');
+
+const START_TOKEN = '__debut__';
+const DAY = 24 * 3600 * 1000;
+const INTERVALS = [0, 1, 3, 7, 14, 30, 60];   // jours entre deux révisions selon la « boîte »
+const WELCOME = {
+  darija_arabic: "أهلا بيك! أنا كيف كيف، غادي نتعلمو الدارجة بصح",
+  darija_latin: "Ahlan bik! Ana Kif-Kif, ghadi nt3allmou darija bsah",
+  traduction_fr: "Bienvenue ! Je suis Kif-Kif, on va apprendre le darija pour de vrai.",
+  note_fr: "Écris-moi en français ou en darija. Pour t'entraîner sur une situation (souk, taxi, famille…), choisis une scène.",
+  new_words: [{ar:"أهلا بيك", lat:"ahlan bik", fr:"bienvenue à toi"}],
+  correction: null, suggestion: null, objectifs_atteints: []
+};
+
+let state = {vocab: [], conversations: [], supprimes: {}, jours: []};
+let lastMaj = 0;
+let conv = null;
+let scenarios = [], scenarioById = {};
+let relMap = {};        // clé normalisée -> relecture de papa
+let papaMap = {};       // clé normalisée -> url de l'enregistrement de papa
+let ttsTexts = [];
+let bubbleCount = 0;    // numéro des bulles du tuteur (bouton principal : #listenBtnN)
+let busy = false;
+let autoplayOn = false;
+let recognition = null;
+let isRecording = false;
+let currentAudio = null;
+let currentBtn = null;
+let vocabFilter = 'tout';
+
+/* ---------- Petits outils ---------- */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+};
+const $ = (id) => document.getElementById(id);
+function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+function attr(s){ return escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function normKey(t){
+  return String(t || '').replace(/[ً-ٰٟـۖ-ۭ]/g, '')
+    .replace(/[^\p{L}\p{N}\s]|_/gu, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function prefs(){
+  return {
+    niveau: $('levelSel').value || 'debutant',
+    trad: $('tradSel').value || 'show',
+    fill: $('sugFillSel').value || 'lat',
+    papa: !AUTONOME && $('papaSel').value !== '0',
+  };
+}
+function toast(msg, ms){
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms || 2600);
+}
+
+function autoResize(){ const el = $('textInput'); el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 130) + 'px'; }
+$('textInput').addEventListener('input', autoResize);
+$('textInput').addEventListener('keydown', (e) => {
+  // Sur téléphone, la touche « retour » va à la ligne : on envoie avec le bouton.
+  if(e.key === 'Enter' && !e.shiftKey && !e.isComposing && !isTouch()){ e.preventDefault(); sendMessage(); }
+});
+function isTouch(){ return window.matchMedia && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820; }
+function scrollToBottom(){ const c = $('chat'); c.scrollTop = c.scrollHeight; }
+
+/* =====================================================================
+   Tuteur en mode autonome (iPhone) : même consigne que server.py, appel direct à Groq
+   ===================================================================== */
+const GROQ_URL = 'https://api.groq.com/openai/v1';
+const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+const SECOURS = ['openai/gpt-oss-20b'];
+const MODEL_EXCLUDE = /whisper|tts|guard|orpheus|playai|distil|compound|embed|vision-only/i;
+
+const NIVEAUX = {
+  debutant: "NIVEAU : grand débutant (il ne connaît presque aucun mot). Phrases très courtes (3 à 7 mots), vocabulaire très courant, une seule idée par réplique. Il t'écrira souvent en français : c'est normal, montre-lui alors comment le dire en darija (correction de type \"traduction\"). La suggestion doit être très simple, facile à recopier.",
+  intermediaire: "NIVEAU : intermédiaire (il comprend des phrases simples). Phrases de 5 à 12 mots. Introduis peu à peu le passé, le futur et des expressions courantes. Encourage-le à répondre en darija.",
+  avance: "NIVEAU : avancé. Parle naturellement (jusqu'à 15 mots), avec des expressions idiomatiques marocaines. Notes en français seulement quand c'est vraiment utile."
+};
+const BASE_PROMPT = `Tu es Kif-Kif, professeure particulière de darija (arabe marocain), patiente, chaleureuse et un peu taquine. L'utilisateur est francophone et apprend en conversant avec toi.
+
+Langue :
+- Parle le darija standard de Casablanca/Rabat, compris partout au Maroc : pas d'arabe classique (fusha), pas d'égyptien ni de levantin, évite les tournures très régionales.
+- Écris le darija en alphabet arabe (orthographe marocaine usuelle, sans voyelles), sans emoji, nombres écrits en lettres.
+- L'utilisateur peut écrire en français, en darija en lettres latines (3=ع, 7=ح, 9=ق, kh=خ, gh=غ, ch=ش) ou en alphabet arabe : comprends tout.
+
+Pédagogie :
+- Ta réplique est lue à voix haute : reste courte et naturelle, comme une vraie conversation (15 mots maximum).
+- Corrige avec bienveillance, jamais sèchement. 1 à 3 nouveaux mots maximum par échange.`;
+const FORMAT_PROMPT = `RÈGLE ESSENTIELLE : c'est une CONVERSATION. "darija_arabic" est TA réplique de personnage, qui RÉPOND à ce que l'élève vient de dire (tu réagis, tu réponds à sa question, tu poses la suivante). Ce n'est JAMAIS une traduction, une reformulation ni une répétition de sa phrase. La traduction de sa phrase va uniquement dans "correction".
+
+Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de markdown), exactement dans ce format :
+{
+  "darija_arabic": "ta réplique en darija, en alphabet arabe",
+  "darija_latin": "la même en lettres latines (arabizi : 3, 7, 9, kh, gh, ch)",
+  "traduction_fr": "la traduction française de ta réplique",
+  "correction": null,
+  "note_fr": "une petite explication culturelle ou grammaticale utile, ou une chaîne vide",
+  "new_words": [{"ar": "mot en arabe", "lat": "translittération", "fr": "traduction"}],
+  "suggestion": {"ar": "une réponse simple que l'utilisateur pourrait te dire maintenant", "lat": "la même en lettres latines", "fr": "sa traduction"},
+  "objectifs_atteints": []
+}
+- "correction" : laisse null si son dernier message était du darija correct (tu peux le féliciter dans note_fr). S'il a écrit en français ou fait une erreur de darija, mets à la place {"type": "traduction" (s'il a écrit en français) ou "correction" (erreur de darija), "ar": "ce qu'il voulait dire, en bon darija", "lat": "la même en lettres latines", "explication_fr": "explication courte"}. S'il a écrit en français (même en partie), "correction" n'est JAMAIS null : elle contient la traduction complète de SA phrase à lui en darija ; ta réplique "darija_arabic" reste, elle, une vraie réponse de personnage, différente. Dans ce cas "lat" est OBLIGATOIRE : c'est la phonétique que l'élève lira à voix haute, en lettres latines simples (3 pour ع, 7 pour ح, 9 pour ق, gh, kh, ch), mot par mot, sans écriture arabe.
+- "objectifs_atteints" : les identifiants des objectifs que son DERNIER message vient de réaliser (même maladroitement ou à moitié en français pour un débutant), sinon une liste vide.`;
+const START_TEXT = "(Début de la scène. Commence toi-même : salue l'utilisateur dans ton rôle et lance la situation avec une question simple.)";
+const ECHO_NUDGE = "\n\nATTENTION : ta réponse précédente se contentait de traduire ou de répéter la phrase de l'élève. Recommence : « darija_arabic » doit être ta RÉPONSE de personnage (réaction + question), différente de sa phrase ; mets la traduction de sa phrase uniquement dans « correction ».";
+
+class ApiErr extends Error{ constructor(code, msg){ super(msg); this.code = code; } }
+function groqKey(){ return store.get('kifkif-groq-key', '').trim(); }
+function localModel(){ return store.get('kifkif-model', '') || DEFAULT_MODEL; }
+
+async function groqFetch(path, body, timeoutMs){
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs || 60000);
+  let r;
+  try{
+    r = await fetch(GROQ_URL + path, {
+      method: body ? 'POST' : 'GET', signal: ctrl.signal,
+      headers: body ? {'Authorization': 'Bearer ' + groqKey(), 'Content-Type': 'application/json'} : {'Authorization': 'Bearer ' + groqKey()},
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name === 'AbortError') throw new ApiErr(504, "Le tuteur met trop de temps à répondre, réessaie.");
+    throw new ApiErr(0, "Impossible de joindre le tuteur (Groq) : vérifie ta connexion internet.");
+  }
+  clearTimeout(timer);
+  const txt = await r.text();
+  let j = null; try{ j = JSON.parse(txt); }catch(e){}
+  if(!r.ok) throw new ApiErr(r.status, (j && j.error && (j.error.message || j.error)) || txt.slice(0, 300) || ('Erreur ' + r.status));
+  return j;
+}
+
+function buildSystemPrompt(sc, niveau, faits){
+  const parts = [BASE_PROMPT, NIVEAUX[niveau] || NIVEAUX.debutant];
+  const scene = [`SCÈNE : ${sc.titre}`, sc.role];
+  if(sc.objectifs.length){
+    scene.push("Reste dans ton rôle pendant toute la scène, tout en restant sa professeure (corrections dans \"correction\" et \"note_fr\").");
+    scene.push("Objectifs de l'utilisateur dans cette scène (identifiant : description) :");
+    for(const o of sc.objectifs) scene.push(`- ${o.id} : ${o.fr}` + (faits.includes(o.id) ? " [déjà réussi]" : ""));
+    if(sc.objectifs.every(o => faits.includes(o.id))) scene.push("Tous les objectifs sont réussis : termine la scène chaleureusement, félicite-le, et propose de continuer à discuter librement.");
+    else scene.push("Amène-le doucement vers le prochain objectif pas encore réussi, un seul à la fois, sans le lui imposer.");
+  }else{
+    scene.push("Pas d'objectif précis dans cette scène : mets toujours \"objectifs_atteints\": [].");
+  }
+  parts.push(scene.join("\n"));
+  parts.push(FORMAT_PROMPT);
+  return parts.join("\n\n");
+}
+function cleanHistory(messages){
+  const out = [];
+  for(const m of (messages || []).slice(-16)){
+    if(!m || (m.role !== 'user' && m.role !== 'assistant')) continue;
+    let content = String(m.content || '').trim();
+    if(!content) continue;
+    if(m.role === 'user' && content === START_TOKEN) content = START_TEXT;
+    if(m.role === 'assistant' && content.startsWith('{')){
+      try{ const d = JSON.parse(content); if(d && d.darija_arabic) content = JSON.stringify({darija_arabic: d.darija_arabic, traduction_fr: d.traduction_fr || ''}); }catch(e){}
+    }
+    out.push({role: m.role, content: content.slice(0, 4000)});
+  }
+  while(out.length && out[0].role !== 'user') out.shift();
+  if(!out.length || out[out.length - 1].role !== 'user') throw new ApiErr(400, 'Message vide.');
+  return out;
+}
+function extractJson(text){
+  text = String(text || '').replace(/```(?:json)?/g, '').trim();
+  const m = text.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('pas de JSON');
+  return JSON.parse(m[0]);
+}
+function _s(v, limit){ return v == null ? '' : String(v).trim().slice(0, limit || 600); }
+function normalizeReply(d, validIds){
+  if(!d || typeof d !== 'object') throw new Error('pas un objet');
+  const ar = _s(d.darija_arabic);
+  if(!ar) throw new Error('darija_arabic manquant');
+  const words = [];
+  for(const w of (Array.isArray(d.new_words) ? d.new_words : [])){
+    if(w && _s(w.ar) && !words.some(x => x.ar === _s(w.ar, 120))) words.push({ar: _s(w.ar, 120), lat: _s(w.lat, 120), fr: _s(w.fr, 120)});
+  }
+  let correction = null;
+  const c = d.correction;
+  if(c && typeof c === 'object' && _s(c.ar)){
+    correction = {type: _s(c.type).toLowerCase().startsWith('trad') ? 'traduction' : 'correction', ar: _s(c.ar), lat: _s(c.lat), explication_fr: _s(c.explication_fr)};
+  }
+  let suggestion = null;
+  const sg = d.suggestion;
+  if(sg && typeof sg === 'object' && _s(sg.ar)) suggestion = {ar: _s(sg.ar), lat: _s(sg.lat), fr: _s(sg.fr)};
+  let objs = d.objectifs_atteints || [];
+  if(typeof objs === 'string') objs = [objs];
+  const done = [];
+  for(const o0 of (Array.isArray(objs) ? objs : [])){
+    const o = _s(o0, 40);
+    if(o && !done.includes(o) && (!validIds || validIds.includes(o))) done.push(o);
+  }
+  return {darija_arabic: ar, darija_latin: _s(d.darija_latin), traduction_fr: _s(d.traduction_fr), correction,
+          note_fr: _s(d.note_fr), new_words: words.slice(0, 3), suggestion, objectifs_atteints: done};
+}
+function normTxt(t){ return String(t || '').replace(/[ً-ٰٟ]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''); }
+function levRatio(a, b){
+  const m = a.length, n = b.length;
+  if(!m || !n) return 0;
+  let prev = Array.from({length: n + 1}, (_, j) => j);
+  for(let i = 1; i <= m; i++){
+    const cur = [i];
+    for(let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return 1 - prev[n] / Math.max(m, n);
+}
+function isEcho(reply, msgs){
+  const ar = normTxt(reply.darija_arabic), lat = normTxt(reply.darija_latin);
+  const refs = [];
+  const c = reply.correction;
+  if(c) refs.push([normTxt(c.ar), ar], [normTxt(c.lat), lat]);
+  const last = msgs.length ? normTxt(msgs[msgs.length - 1].content) : '';
+  if(last && last !== normTxt(START_TEXT)) refs.push([last, ar], [last, lat]);
+  return refs.some(([a, b]) => a.length >= 6 && b.length >= 6 && levRatio(a, b) >= 0.7);
+}
+function recordUsage(model, usage){
+  let u = {}; try{ u = JSON.parse(store.get('kifkif-usage', '{}')) || {}; }catch(e){}
+  const day = today();
+  const d = u[day] || (u[day] = {messages: 0, tokens: 0});
+  d.messages++; d.tokens += parseInt((usage || {}).total_tokens || 0, 10) || 0;
+  for(const k of Object.keys(u).sort().slice(0, -30)) delete u[k];
+  store.set('kifkif-usage', JSON.stringify(u));
+}
+async function chatOnce(model, system, msgs, valid){
+  const body = {model, messages: [{role: 'system', content: system}, ...msgs], temperature: 0.7, max_tokens: 2000};
+  if(model.includes('gpt-oss')) body.reasoning_effort = 'low';
+  let lastErr = null;
+  for(const jsonMode of [true, false]){
+    const b = {...body};
+    if(jsonMode) b.response_format = {type: 'json_object'};
+    let data;
+    try{ data = await groqFetch('/chat/completions', b); }
+    catch(e){
+      if(e.code === 400 && jsonMode){ lastErr = e; continue; }
+      if(e.code === 401) throw new ApiErr(401, "Clé Groq refusée : vérifie-la dans ⚙️ Réglages.");
+      throw e;
+    }
+    try{
+      const content = data.choices[0].message.content || '';
+      const reply = normalizeReply(extractJson(content), valid);
+      recordUsage(model, data.usage);
+      return reply;
+    }catch(e){ lastErr = new ApiErr(502, "Le tuteur a répondu dans un format inattendu, réessaie."); }
+  }
+  throw lastErr || new ApiErr(502, "Réponse du tuteur illisible, réessaie.");
+}
+async function localChat(p){
+  if(!groqKey()) throw new ApiErr(400, "Il manque ta clé Groq : ouvre ⚙️ Réglages (ou la carte en haut de la conversation).");
+  const msgs = cleanHistory(p.messages);
+  const sc = scenarioById[p.scenario] || scenarios[0];
+  const valid = sc.objectifs.map(o => o.id);
+  const faits = (p.objectifs_faits || []).filter(f => valid.includes(f));
+  const system = buildSystemPrompt(sc, NIVEAUX[p.niveau] ? p.niveau : 'debutant', faits);
+  const first = localModel();
+  const models = [first, ...SECOURS.filter(m => m !== first)];
+  let last = null;
+  for(let i = 0; i < models.length; i++){
+    const m = models[i];
+    try{
+      let r = await chatOnce(m, system, msgs, valid);
+      if(isEcho(r, msgs)){
+        const r2 = await chatOnce(m, system + ECHO_NUDGE, msgs, valid);
+        if(r2.correction == null && r.correction) r2.correction = r.correction;
+        r = r2;
+      }
+      return {reply: r, model: m, secours: i > 0};
+    }catch(e){
+      last = e;
+      const modelProblem = e.code === 404 || (e.code === 400 && /model/i.test(e.message));
+      if(e.code === 429 || modelProblem) continue;
+      throw e;
+    }
+  }
+  if(last && last.code === 429) throw new ApiErr(429, "Limite gratuite atteinte pour le moment : attends une minute et réessaie.");
+  if(last && (last.code === 404 || last.code === 400)) throw new ApiErr(502, `Modèle « ${models[models.length - 1]} » introuvable : choisis-en un autre dans ⚙️ Réglages.`);
+  throw last || new ApiErr(502, "Réponse du tuteur illisible, réessaie.");
+}
+async function apiChat(payload){
+  if(AUTONOME) return localChat(payload);
+  const response = await fetch('/api/chat', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+  const raw = await response.json().catch(() => ({}));
+  if(!response.ok || !raw.reply) throw new Error(raw.error || ('Erreur ' + response.status));
+  return raw;
+}
+
+async function saveKey(k){
+  k = String(k || '').trim();
+  if(!k){ toast('Colle d\'abord ta clé Groq'); return false; }
+  store.set('kifkif-groq-key', k);
+  $('keyInput').value = '';
+  try{
+    await groqFetch('/models', null, 20000);
+    toast('✅ Clé enregistrée et vérifiée');
+    updateKeyInfo();
+    const card = $('setupRow'); if(card) card.remove();
+    if(conv && sceneOf().id !== 'libre' && !conv.history.length) kickoff();
+    return true;
+  }catch(e){
+    toast(e.code === 401 ? '⚠️ Groq refuse cette clé : vérifie-la' : '⚠️ Clé enregistrée, mais vérification impossible : ' + e.message, 6000);
+    updateKeyInfo();
+    return false;
+  }
+}
+function updateKeyInfo(){
+  const k = groqKey();
+  $('keyInfo').textContent = k ? `Clé enregistrée : ${k.slice(0, 6)}…${k.slice(-4)}` : 'Aucune clé enregistrée.';
+}
+function addSetupCard(){
+  const row = document.createElement('div');
+  row.className = 'row wide'; row.id = 'setupRow';
+  row.innerHTML = `<div class="scene-card setup-card"><h3>📱 Première fois sur ce téléphone</h3>
+    <div>Pour que Kif-Kif te réponde, il lui faut ta clé Groq (gratuite) :</div>
+    <ol><li>Ouvre <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> et connecte-toi.</li>
+    <li>Touche « Create API Key », puis copie la clé (elle commence par gsk_).</li>
+    <li>Colle-la ici et touche « Enregistrer ».</li></ol>
+    <input class="field" id="setupKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="gsk_…">
+    <div class="btns"><button class="big-btn main" onclick="saveKey($('setupKey').value)">Enregistrer</button></div>
+    <div class="obj-tip">La clé reste uniquement sur ce téléphone. Astuce : ajoute Kif-Kif à l'écran d'accueil (bouton Partager ⬆️ → « Sur l'écran d'accueil »).</div></div>`;
+  $('chat').prepend(row);
+}
+
+/* =====================================================================
+   Données : carnet + conversations
+   PC : enregistrés par le serveur (dossier donnees) · iPhone : gardés dans le téléphone
+   ===================================================================== */
+const LS_STATE = 'kifkif-state';
+function mirrorLocal(pending){
+  try{ localStorage.setItem(LS_STATE, JSON.stringify({...state, pending: !!pending})); }catch(e){}
+}
+function loadLocalState(){ try{ return JSON.parse(localStorage.getItem(LS_STATE) || 'null'); }catch(e){ return null; } }
+
+function newVocab(ar, lat, fr, type){
+  const now = Date.now();
+  return {ar: String(ar || '').trim(), lat: String(lat || '').trim(), fr: String(fr || '').trim(), type: type || 'mot', ajoute: now, maj: now, box: 0, due: 0};
+}
+function fixVocab(w){
+  if(!w || !w.ar) return null;
+  return {type: 'mot', box: 0, due: 0, ajoute: 0, maj: 0, lat: '', fr: '', ...w};
+}
+
+/* Fusion (deux navigateurs, PC + iPhone, ou serveur injoignable un moment) : on garde la version la plus récente */
+function mergeInto(target, other){
+  if(!other) return false;
+  let changed = false;
+  const sup = {...(target.supprimes || {})};
+  for(const [k, t] of Object.entries(other.supprimes || {})){ if(!sup[k] || sup[k] < t){ sup[k] = t; changed = true; } }
+  target.supprimes = sup;
+  const byKey = new Map();
+  for(const w of target.vocab){ byKey.set(normKey(w.ar), w); }
+  for(const w0 of (other.vocab || [])){
+    const w = fixVocab(w0); if(!w) continue;
+    const k = normKey(w.ar);
+    const mine = byKey.get(k);
+    if(!mine){ byKey.set(k, w); changed = true; }
+    else if((w.maj || 0) > (mine.maj || 0)){ byKey.set(k, w); changed = true; }
+  }
+  target.vocab = [...byKey.values()].filter(w => !(sup[normKey(w.ar)] && sup[normKey(w.ar)] >= (w.maj || 0)));
+  const convById = new Map(target.conversations.map(c => [c.id, c]));
+  for(const c of (other.conversations || [])){
+    if(!c || !c.id) continue;
+    const mine = convById.get(c.id);
+    if(!mine || (c.maj || 0) > (mine.maj || 0)){ convById.set(c.id, c); changed = true; }
+  }
+  target.conversations = [...convById.values()].sort((a, b) => (a.maj || 0) - (b.maj || 0));
+  const jours = new Set([...(target.jours || []), ...(other.jours || [])]);
+  if(jours.size !== (target.jours || []).length) changed = true;
+  target.jours = [...jours].sort();
+  return changed;
+}
+
+async function loadState(){
+  let server = null;
+  if(!AUTONOME){ try{ const r = await fetch('/api/donnees'); if(r.ok) server = await r.json(); }catch(e){} }
+  const local = loadLocalState();
+  if(server && Array.isArray(server.vocab)){
+    state = {vocab: server.vocab.map(fixVocab).filter(Boolean), conversations: server.conversations || [], supprimes: server.supprimes || {}, jours: server.jours || []};
+    lastMaj = server.maj || 0;
+    if(local && local.pending && mergeInto(state, local)) scheduleSave();
+    mirrorLocal(false);
+  }else if(local && Array.isArray(local.vocab)){
+    state = {vocab: local.vocab.map(fixVocab).filter(Boolean), conversations: local.conversations || [], supprimes: local.supprimes || {}, jours: local.jours || []};
+    if(!AUTONOME) scheduleSave();
+  }else{
+    let legacy = [];   // carnet de la version précédente de Kif-Kif
+    try{ legacy = JSON.parse(store.get('kifkif-vocab', '[]')) || []; }catch(e){}
+    state = {vocab: legacy.filter(w => w && w.ar).map(w => newVocab(w.ar, w.lat, w.fr, 'mot')), conversations: [], supprimes: {}, jours: []};
+    if(state.vocab.length) scheduleSave();
+  }
+}
+
+let saveTimer = null, saving = false, saveAgain = false;
+function scheduleSave(){
+  if(AUTONOME){
+    if(state.conversations.length > 40) state.conversations = state.conversations.slice(-40);
+    mirrorLocal(false);
+    updateSideFoot();
+    return;
+  }
+  mirrorLocal(true);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 400);
+  updateSideFoot();
+}
+function postSave(){
+  const convs = state.conversations.slice(-40);
+  return fetch('/api/donnees', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({vocab: state.vocab, conversations: convs, supprimes: state.supprimes, jours: state.jours, base: lastMaj})});
+}
+async function saveNow(){
+  if(saving){ saveAgain = true; return; }
+  saving = true;
+  try{
+    let r = await postSave();
+    if(r.status === 409){ await pullAndMerge(); r = await postSave(); }
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    lastMaj = j.maj || lastMaj;
+    mirrorLocal(false);
+    $('saveWarn').style.display = 'none';
+  }catch(e){
+    console.error('sauvegarde', e);
+    $('saveWarn').style.display = 'block';
+  }
+  saving = false;
+  if(saveAgain){ saveAgain = false; saveNow(); }
+}
+async function pullAndMerge(){
+  if(AUTONOME) return false;
+  try{
+    const r = await fetch('/api/donnees');
+    if(!r.ok) return false;
+    const s = await r.json();
+    const curId = conv && conv.id, curMaj = conv && conv.maj;
+    const changed = mergeInto(state, s);
+    lastMaj = Math.max(lastMaj, s.maj || 0);
+    if(curId){
+      const c = state.conversations.find(x => x.id === curId);
+      if(c && c !== conv){ conv = c; if((c.maj || 0) !== curMaj) renderConversation(); }
+    }
+    if(changed){
+      updateCounts();
+      if($('vocabPanel').classList.contains('open')) renderVocab();
+    }
+    return changed;
+  }catch(e){ return false; }
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') pullAndMerge(); });
+
+/* =====================================================================
+   Scènes et conversations
+   ===================================================================== */
+function normalizeScenarios(items){
+  const out = [], seen = new Set();
+  for(const s of items || []){
+    const sid = String((s && s.id) || '').trim();
+    if(!/^[a-z0-9_-]{1,40}$/.test(sid) || seen.has(sid) || !s.role) continue;
+    seen.add(sid);
+    const objs = [];
+    for(const o of s.objectifs || []){
+      const oid = String((o && o.id) || '').trim();
+      if(/^[a-z0-9_-]{1,40}$/.test(oid) && o.fr && !objs.some(x => x.id === oid)) objs.push({id: oid, fr: String(o.fr).trim()});
+    }
+    out.push({id: sid, emoji: String(s.emoji || '💬'), titre: String(s.titre || sid), resume: String(s.resume || ''),
+              niveau_conseille: NIVEAUX[s.niveau_conseille] ? s.niveau_conseille : 'debutant', role: String(s.role).trim(),
+              astuce_fr: String(s.astuce_fr || ''), objectifs: objs});
+  }
+  return out;
+}
+async function loadScenarios(){
+  scenarios = [];
+  if(AUTONOME){
+    try{
+      const raw = JSON.parse($('embeddedScenarios').textContent);
+      scenarios = normalizeScenarios(Array.isArray(raw) ? raw : raw.scenarios);
+    }catch(e){ scenarios = []; }
+  }else{
+    try{
+      const r = await fetch('/api/scenarios');
+      const j = await r.json();
+      scenarios = j.scenarios || [];
+      if(j.erreur) toast('⚠️ ' + j.erreur, 6000);
+    }catch(e){ scenarios = []; }
+  }
+  if(!scenarios.some(s => s.id === 'libre')) scenarios.unshift({id: 'libre', emoji: '💬', titre: 'Conversation libre', resume: 'On discute de tout et de rien.', role: "Conversation libre sur la vie quotidienne de l'utilisateur. Pose une seule question simple à la fois.", astuce_fr: '', objectifs: [], niveau_conseille: 'debutant'});
+  scenarioById = Object.fromEntries(scenarios.map(s => [s.id, s]));
+}
+function sceneOf(c){ return scenarioById[(c || conv || {}).scenario] || scenarios[0]; }
+
+function createConversation(scenarioId){
+  const c = {id: uid(), scenario: scenarioId, niveau: prefs().niveau, cree: Date.now(), maj: Date.now(), display: [], history: [], faits: [], termine: false};
+  state.conversations.push(c);
+  return c;
+}
+function latestConversation(scenarioId){
+  const list = state.conversations.filter(c => c.scenario === scenarioId);
+  return list.sort((a, b) => (b.maj || 0) - (a.maj || 0))[0] || null;
+}
+function setConversation(c){
+  conv = c;
+  store.set('kifkif-conv', c.id);
+  renderConversation();
+  if(sceneOf(c).id !== 'libre' && !c.history.length && (!AUTONOME || groqKey())) kickoff();
+}
+function chooseScenario(id){
+  if(busy){ toast('Attends la réponse de Kif-Kif avant de changer de scène'); return; }
+  closePanel('scenePanel');
+  const last = latestConversation(id);
+  if(last && !last.termine){ setConversation(last); }
+  else { setConversation(createConversation(id)); scheduleSave(); }
+}
+function newConversation(){
+  if(busy) return;
+  if(conv && conv.display.length && !confirm('Recommencer cette scène depuis le début ?\n(L\'ancienne conversation reste disponible pour la relecture.)')) return;
+  setConversation(createConversation(sceneOf().id));
+  scheduleSave();
+}
+
+function renderSceneBar(){
+  const sc = sceneOf();
+  $('sceneLabel').textContent = `${sc.emoji} ${sc.titre}`;
+  $('headerSub').textContent = sc.id === 'libre' ? 'ta professeure de darija' : `scène : ${sc.titre}`;
+  const n = sc.objectifs.length, d = sc.objectifs.filter(o => conv.faits.includes(o.id)).length;
+  $('objBtn').style.display = n ? '' : 'none';
+  $('objCount').textContent = `${d}/${n}`;
+  $('objBtn').classList.toggle('done', n > 0 && d === n);
+  $('objList').innerHTML = n
+    ? sc.objectifs.map(o => {
+        const ok = conv.faits.includes(o.id);
+        return `<div class="obj-item ${ok ? 'done' : ''}"><span class="ck">${ok ? '✓' : ''}</span><span>${escapeHtml(o.fr)}</span></div>`;
+      }).join('') + (sc.astuce_fr ? `<div class="obj-tip">💡 ${escapeHtml(sc.astuce_fr)}</div>` : '')
+    : `<div class="obj-tip">Discussion libre, sans objectif. Pour t'entraîner sur une situation (café, taxi, souk…), touche la scène ci-dessus.</div>`;
+  if(!n) $('objList').classList.remove('open');
+}
+function toggleObjectives(){ $('objList').classList.toggle('open'); }
+
+function openScenes(){
+  const html = scenarios.map(sc => {
+    const last = latestConversation(sc.id);
+    let st = '';
+    if(last && sc.objectifs.length){
+      const d = sc.objectifs.filter(o => last.faits.includes(o.id)).length;
+      st = last.termine ? '✅ Réussie — rejouer' : (last.display.length ? `▶ Reprendre (${d}/${sc.objectifs.length} objectifs)` : '');
+    }else if(last && last.display.length){ st = '▶ Reprendre'; }
+    const lv = {debutant: 'débutant', intermediaire: 'intermédiaire', avance: 'avancé'}[sc.niveau_conseille] || '';
+    return `<div class="scene-choice ${conv && conv.scenario === sc.id ? 'current' : ''}" data-id="${attr(sc.id)}" onclick="chooseScenario(this.dataset.id)">
+      <div class="em">${escapeHtml(sc.emoji)}</div>
+      <div><div class="t">${escapeHtml(sc.titre)}<span class="lvl">${lv}</span></div>
+      <div class="r">${escapeHtml(sc.resume)}</div>${st ? `<div class="st">${st}</div>` : ''}</div></div>`;
+  }).join('');
+  $('sceneList').innerHTML = html + (AUTONOME ? '' : `<div class="muted" style="margin-top:6px">Tu peux ajouter ou modifier des scènes dans le fichier <b>scenarios.json</b> (avec le Bloc-notes).</div>`);
+  openPanel('scenePanel');
+}
+
+function renderConversation(){
+  stopAudio();
+  $('chat').innerHTML = '';
+  ttsTexts = [];
+  bubbleCount = 0;
+  const sc = sceneOf();
+  if(sc.id === 'libre') addTutorBubble(WELCOME, {});
+  else addSceneIntro(sc);
+  for(const it of conv.display){
+    if(it.t === 'u') addUserBubble(it.text);
+    else if(it.t === 'a') addTutorBubble(it.data, it);
+    else if(it.t === 'n') addTutorNote(it.text);
+    else if(it.t === 'fin') addSuccessCard(sc);
+  }
+  renderSceneBar();
+  scrollToBottom();
+  if(AUTONOME && !groqKey()){ addSetupCard(); $('chat').scrollTop = 0; }
+}
+
+/* ---------- Bulles ---------- */
+function registerTTS(text){ ttsTexts.push(text); return ttsTexts.length - 1; }
+function tutorRow(inner){
+  const row = document.createElement('div');
+  row.className = 'row tutor';
+  row.innerHTML = `<div class="avatar">K</div><div class="tile-wrap">${inner}</div>`;
+  return row;
+}
+
+function addUserBubble(text){
+  const row = document.createElement('div');
+  row.className = 'row user';
+  row.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+  $('chat').appendChild(row);
+  scrollToBottom();
+  return row;
+}
+/* Traduction (ou correction) de TA phrase, affichée sous ta bulle */
+function attachUserTrad(c){
+  const users = $('chat').querySelectorAll('.row.user');
+  const urow = users[users.length - 1];
+  if(!urow || !c || !(c.ar || c.lat)) return;
+  const old = urow.querySelector('.user-trad'); if(old) old.remove();
+  const ci = registerTTS(c.ar || c.lat);
+  const box = document.createElement('div');
+  box.className = 'box user-trad' + (c.type === 'traduction' ? '' : ' fix');
+  box.innerHTML = `<div class="label">${c.type === 'traduction' ? '🇲🇦 Ta phrase en darija :' : '✏️ Plus juste :'}</div>
+    ${c.lat ? `<div class="lat">${escapeHtml(c.lat)}</div>` : ''}${c.ar ? `<div class="ar">${escapeHtml(c.ar)}</div>` : ''}
+    ${c.explication_fr ? `<div style="margin-top:4px;color:var(--text-2)">${escapeHtml(c.explication_fr)}</div>` : ''}
+    <div class="actions" style="margin-top:8px">
+      <button class="listen-btn small primary" data-idle="▶ écouter" onclick="playTTS(${ci}, this)">▶ écouter</button>
+      <button class="listen-btn small" onclick="saveUserTrad(this)" data-ar="${attr(c.ar || '')}" data-lat="${attr(c.lat || '')}" data-fr="${attr(urow.querySelector('.bubble').textContent)}" title="Garder dans le carnet">⭐ garder</button>
+    </div>`;
+  urow.appendChild(box);
+}
+function saveUserTrad(btn){
+  const d = btn.dataset, ar = d.ar || d.lat, k = normKey(ar);
+  if(state.vocab.some(v => normKey(v.ar) === k)){ toast('Déjà dans ton carnet'); return; }
+  state.vocab.push(newVocab(ar, d.lat, d.fr, 'phrase'));
+  delete state.supprimes[k];
+  btn.textContent = '✓ gardée'; btn.disabled = true; btn.classList.add('done');
+  updateCounts(); scheduleSave();
+  toast('⭐ Phrase ajoutée au carnet');
+}
+function addTypingIndicator(){
+  const row = document.createElement('div');
+  row.className = 'row tutor'; row.id = 'typingRow';
+  row.innerHTML = `<div class="avatar">K</div><div class="typing" title="Kif-Kif réfléchit…"><span></span><span></span><span></span></div>`;
+  $('chat').appendChild(row); scrollToBottom();
+}
+function removeTypingIndicator(){ const r = $('typingRow'); if(r) r.remove(); }
+
+function addSceneIntro(sc){
+  const row = document.createElement('div');
+  row.className = 'row wide';
+  row.innerHTML = `<div class="scene-card"><h3>${escapeHtml(sc.emoji)} ${escapeHtml(sc.titre)}</h3>
+    <div>${escapeHtml(sc.resume)}</div>
+    ${sc.objectifs.length ? `<div style="margin-top:8px;color:var(--text)">🎯 Tes objectifs :</div><ul>${sc.objectifs.map(o => `<li>${escapeHtml(o.fr)}</li>`).join('')}</ul>` : ''}
+    ${sc.astuce_fr ? `<div class="obj-tip">💡 ${escapeHtml(sc.astuce_fr)}</div>` : ''}
+    <div class="obj-tip">Bloqué ? Écris en français, ou touche « 💡 Un indice ? » sous les messages.</div></div>`;
+  $('chat').appendChild(row);
+}
+function addSuccessCard(sc){
+  const row = document.createElement('div');
+  row.className = 'row wide';
+  row.innerHTML = `<div class="scene-card success"><h3>🎉 Scène réussie !</h3>
+    <div>Tu as atteint les ${sc.objectifs.length} objectifs de « ${escapeHtml(sc.titre)} ». Bravo !</div>
+    <div class="btns"><button class="big-btn main" onclick="openScenes()">Choisir une autre scène</button>
+    <button class="big-btn" onclick="openReview(false)">Réviser mes mots</button></div></div>`;
+  $('chat').appendChild(row);
+  scrollToBottom();
+}
+
+function addTutorBubble(data, meta){
+  meta = meta || {};
+  const p = prefs();
+  const idx = registerTTS(data.darija_arabic);
+  const bn = bubbleCount++;
+  let html = `<div class="tile">
+    <div class="lines">
+      <div class="darija-lat optional">${escapeHtml(data.darija_latin)}</div>
+      <div class="darija-ar">${escapeHtml(data.darija_arabic)}</div>
+    </div>`;
+  if(data.traduction_fr){
+    html += p.trad === 'show'
+      ? `<div class="trad"><span class="fl">🇫🇷</span>${escapeHtml(data.traduction_fr)}</div>`
+      : `<button class="trad-btn" onclick="revealTrad(this)" data-t="${attr(data.traduction_fr)}">👁 voir la traduction</button>`;
+  }
+  html += `<div class="actions">
+      <button class="listen-btn primary" id="listenBtn${bn}" data-idle="▶ écouter" onclick="playTTS(${idx}, this)">▶ écouter</button>
+      <button class="listen-btn" data-idle="🎙 répéter" onclick="practice(${idx}, this)" title="Répète la phrase au micro (expérimental)">🎙 répéter</button>
+      <button class="listen-btn" onclick="savePhrase(${idx}, this)" data-fr="${attr(data.traduction_fr || '')}" data-lat="${attr(data.darija_latin || '')}" title="Garder cette phrase dans le carnet">⭐ garder</button>
+    </div>
+    <div class="practice-result" id="practice${idx}"></div>`;
+  if(data.note_fr){ html += `<div class="note"><b>💬 Kif-Kif :</b> ${escapeHtml(data.note_fr)}</div>`; }
+  if(data.new_words && data.new_words.length){
+    html += '<div class="newwords"><span class="nw-label">Nouveaux mots :</span>' + data.new_words.map(w => {
+      const wi = registerTTS(w.ar);
+      return `<span class="word-chip" title="écouter" onclick="playTTS(${wi}, null)">🔈 <b>${escapeHtml(w.lat || w.ar)}</b> · ${escapeHtml(w.fr)}</span>`;
+    }).join('') + '</div>';
+  }
+  if(data.suggestion){
+    const s = data.suggestion;
+    html += `<div class="box suggestion" onclick="useSuggestion(this)" data-ar="${attr(s.ar)}" data-lat="${attr(s.lat)}" title="Toucher pour l'écrire dans la zone de saisie">
+      <div class="sug-hint">💡 Un indice ?</div>
+      <div class="sug-body"><div class="label">💡 Tu peux répondre : <span style="opacity:.7">(toucher pour l'utiliser)</span></div>
+      <div class="lat">${escapeHtml(s.lat)}</div><div class="ar">${escapeHtml(s.ar)}</div>
+      ${s.fr ? `<div style="color:var(--muted)">${escapeHtml(s.fr)}</div>` : ''}</div></div>`;
+  }
+  if(meta.secours && meta.model){ html += `<div class="model-tag">Réponse du modèle de secours (${escapeHtml(meta.model)}) : le modèle principal a atteint sa limite gratuite.</div>`; }
+  html += `</div>`;
+  const row = tutorRow(html);
+  if(data.correction) attachUserTrad(data.correction);
+  $('chat').appendChild(row);
+  scrollToBottom();
+  return {idx, btn: $('listenBtn' + bn)};
+}
+
+function addTutorNote(text, retry){
+  const row = tutorRow(`<div class="tile"><div class="plain-note">${escapeHtml(text)}</div>
+    ${retry ? '<button class="listen-btn retry-btn" onclick="this.closest(\'.row\').remove(); kickoff()">↻ Réessayer</button>' : ''}</div>`);
+  $('chat').appendChild(row);
+  scrollToBottom();
+}
+
+function revealTrad(btn){
+  const d = document.createElement('div');
+  d.className = 'trad';
+  d.innerHTML = '<span class="fl">🇫🇷</span>' + escapeHtml(btn.dataset.t);
+  btn.replaceWith(d);
+}
+function useSuggestion(el){
+  if(document.body.classList.contains('sug-ask') && !el.classList.contains('open')){ el.classList.add('open'); return; }
+  const t = prefs().fill === 'ar' ? (el.dataset.ar || el.dataset.lat) : (el.dataset.lat || el.dataset.ar);
+  const input = $('textInput');
+  input.value = t; autoResize(); input.focus();
+}
+
+/* ---------- Envoi au tuteur ---------- */
+function sendMessage(){
+  const input = $('textInput');
+  const text = input.value.trim();
+  if(!text || busy) return;
+  if(isRecording && recognition){ try{ recognition.abort(); }catch(e){} stopRecordingUI(); }
+  input.value = ''; autoResize();
+  sendToTutor(text, false);
+}
+function kickoff(){ sendToTutor(START_TOKEN, true); }
+
+async function sendToTutor(text, hidden){
+  if(busy) return;
+  busy = true; $('sendBtn').disabled = true;
+  const c = conv;
+  let bubble = null;
+  if(!hidden){ bubble = addUserBubble(text); c.display.push({t: 'u', text}); }
+  c.history.push({role: 'user', content: text});
+  addTypingIndicator();
+  try{
+    const raw = await apiChat({messages: c.history, scenario: c.scenario, niveau: prefs().niveau, objectifs_faits: c.faits});
+    const data = raw.reply;
+    removeTypingIndicator();
+    c.history.push({role: 'assistant', content: JSON.stringify({darija_arabic: data.darija_arabic, darija_latin: data.darija_latin, traduction_fr: data.traduction_fr})});
+    const item = {t: 'a', data, model: raw.model, secours: !!raw.secours};
+    c.display.push(item);
+    if(conv === c){
+      const b = addTutorBubble(data, item);
+      if(autoplayOn) playTTS(b.idx, b.btn);
+    }
+    if(!hidden) markToday();
+    handleObjectives(c, data.objectifs_atteints || []);
+    addWords(data.new_words || []);
+    c.maj = Date.now();
+    scheduleSave();
+  }catch(err){
+    console.error(err);
+    removeTypingIndicator();
+    c.history.pop();
+    if(!hidden){
+      c.display.pop();
+      if(bubble) bubble.remove();
+      $('textInput').value = text; autoResize();
+    }
+    addTutorNote('Petit souci : ' + (err.message || String(err)), hidden);
+  }
+  busy = false; $('sendBtn').disabled = false;
+}
+
+function handleObjectives(c, ids){
+  const sc = sceneOf(c);
+  const fresh = ids.filter(id => sc.objectifs.some(o => o.id === id) && !c.faits.includes(id));
+  if(!fresh.length) return;
+  c.faits.push(...fresh);
+  const names = fresh.map(id => sc.objectifs.find(o => o.id === id).fr);
+  toast('✅ Objectif réussi : ' + names.join(' · '));
+  if(conv === c) renderSceneBar();
+  if(sc.objectifs.length && !c.termine && sc.objectifs.every(o => c.faits.includes(o.id))){
+    c.termine = true;
+    c.display.push({t: 'fin'});
+    if(conv === c) setTimeout(() => addSuccessCard(sc), 300);
+  }
+}
+
+/* =====================================================================
+   Carnet
+   ===================================================================== */
+function addWords(words){
+  let added = 0;
+  for(const w0 of words){
+    if(!w0 || !w0.ar) continue;
+    let w = w0;
+    const rel = relMap[normKey(w0.ar)];
+    if(rel && (rel.statut === 'corrige' || rel.statut === 'fes') && (rel.correction_ar || rel.correction_lat)){
+      // papa a déjà corrigé ce mot : on enregistre directement la bonne forme
+      w = {ar: rel.correction_ar || w0.ar, lat: rel.correction_lat || w0.lat, fr: w0.fr};
+    }
+    const k = normKey(w.ar);
+    if(!state.vocab.some(v => normKey(v.ar) === k)){
+      const nv = newVocab(w.ar, w.lat, w.fr, 'mot');
+      if(w !== w0 || (rel && rel.statut === 'ok')) nv.valide = true;
+      state.vocab.push(nv); added++;
+    }
+    delete state.supprimes[k];
+  }
+  if(added){ updateCounts(); scheduleSave(); }
+}
+function savePhrase(idx, btn){
+  const ar = ttsTexts[idx];
+  const k = normKey(ar);
+  if(state.vocab.some(v => normKey(v.ar) === k)){ toast('Déjà dans ton carnet'); return; }
+  state.vocab.push(newVocab(ar, btn.dataset.lat, btn.dataset.fr, 'phrase'));
+  delete state.supprimes[k];
+  btn.textContent = '⭐ gardée'; btn.classList.add('done');
+  updateCounts(); scheduleSave();
+  toast('⭐ Phrase ajoutée au carnet');
+}
+function toggleAddForm(){ $('addForm').classList.toggle('open'); if($('addForm').classList.contains('open')) $('addAr').focus(); }
+function addManualWord(){
+  const ar = $('addAr').value.trim(), lat = $('addLat').value.trim(), fr = $('addFr').value.trim();
+  if(!ar || !fr){ toast('Écris au moins le mot en darija et sa traduction'); return; }
+  const k = normKey(ar);
+  if(state.vocab.some(v => normKey(v.ar) === k)){ toast('Déjà dans ton carnet'); return; }
+  state.vocab.push(newVocab(ar, lat, fr, ar.split(/\s+/).length > 2 ? 'phrase' : 'mot'));
+  delete state.supprimes[k];
+  $('addAr').value = $('addLat').value = $('addFr').value = '';
+  $('addForm').classList.remove('open');
+  updateCounts(); scheduleSave(); renderVocab();
+}
+function vocabByKey(k){ return state.vocab.find(w => normKey(w.ar) === k); }
+function deleteWord(k){
+  const i = state.vocab.findIndex(w => normKey(w.ar) === k);
+  const w = state.vocab[i];
+  if(!w || !confirm(`Supprimer « ${w.lat || w.ar} » du carnet ?`)) return;
+  state.supprimes[normKey(w.ar)] = Date.now();
+  state.vocab.splice(i, 1);
+  updateCounts(); scheduleSave(); renderVocab();
+}
+function setVocabFilter(f){
+  vocabFilter = f;
+  document.querySelectorAll('#vocabTabs .tab').forEach(t => t.classList.toggle('active', t.dataset.f === f));
+  renderVocab();
+}
+function openVocab(){ applyRelectures(); renderVocab(); openPanel('vocabPanel'); }
+function renderVocab(){
+  const list = $('vocabList');
+  const items = state.vocab.map(w => ({w})).filter(({w}) =>
+    vocabFilter === 'tout' || (vocabFilter === 'papa' ? w.valide : (w.type || 'mot') === vocabFilter)).reverse();
+  if(!state.vocab.length){
+    list.innerHTML = `<div class="empty-state"><span class="big">📓</span>Ton carnet est vide pour l'instant.<br>Discute avec Kif-Kif : les nouveaux mots apparaîtront ici automatiquement. Tu peux aussi garder une phrase avec ⭐.</div>`;
+    return;
+  }
+  if(!items.length){ list.innerHTML = `<div class="empty-state">Rien dans cette catégorie pour l'instant.</div>`; return; }
+  list.innerHTML = `<div class="muted" style="margin-bottom:4px">${items.length} élément(s)</div>` + items.map(({w}) => {
+    const badges = [w.valide ? '✅ validé par papa' : '', papaMap[normKey(w.ar)] ? '🎙 voix de papa' : ''].filter(Boolean).join(' · ');
+    return `<div class="vocab-item" style="margin-bottom:8px">
+      <button class="listen-btn small primary" data-idle="▶" data-k="${attr(normKey(w.ar))}" onclick="playVocab(this.dataset.k, this)">▶</button>
+      <div class="vmain">
+        ${w.lat ? `<div class="vl">${escapeHtml(w.lat)}</div>` : ''}
+        <div class="vw">${escapeHtml(w.ar)}</div>
+        <div class="vm">${escapeHtml(w.fr)}</div>
+        ${badges ? `<div class="badges">${badges}</div>` : ''}
+      </div>
+      <button class="del-btn" title="Supprimer" data-k="${attr(normKey(w.ar))}" onclick="deleteWord(this.dataset.k)">🗑</button>
+    </div>`;
+  }).join('');
+}
+function playVocab(k, btn){ const w = vocabByKey(k); if(w) speak(w.ar, btn); }
+function today(d){ const x = d || new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }
+function markToday(){
+  state.jours = state.jours || [];
+  const t = today();
+  if(!state.jours.includes(t)){ state.jours.push(t); state.jours = state.jours.slice(-400); }
+}
+function streak(){
+  const set = new Set(state.jours || []);
+  let n = 0;
+  const d = new Date();
+  if(!set.has(today(d))) d.setDate(d.getDate() - 1);   // la série tient encore si on n'a pas encore pratiqué aujourd'hui
+  while(set.has(today(d))){ n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function renderProgress(){
+  const learned = state.vocab.filter(w => (w.box || 0) >= 3).length;
+  const done = new Set(state.conversations.filter(c => c.termine).map(c => c.scenario));
+  const total = scenarios.filter(s => s.objectifs.length).length;
+  $('progressInfo').innerHTML = `🔥 Série : <b>${streak()}</b> jour(s) d'affilée · ${(state.jours || []).length} jour(s) d'entraînement en tout<br>`
+    + `📓 ${state.vocab.length} mot(s) et phrase(s) dans le carnet, dont <b>${learned}</b> bien retenu(s)<br>`
+    + `🎯 Scènes réussies : <b>${done.size}</b> / ${total}`;
+}
+function updateSideFoot(){
+  const el = $('sideFoot'); if(!el) return;
+  const done = new Set(state.conversations.filter(c => c.termine).map(c => c.scenario));
+  const total = scenarios.filter(s => s.objectifs.length).length;
+  el.innerHTML = `🔥 Série : <b>${streak()}</b> jour(s)<br>📓 <b>${state.vocab.length}</b> mot(s) et phrase(s)<br>🎯 Scènes réussies : <b>${done.size}</b> / ${total}`
+    + (AUTONOME ? '' : `<br><span style="opacity:.8">💾 enregistré dans le dossier « donnees »</span>`);
+}
+function dueCards(){ const now = Date.now(); return state.vocab.filter(w => (w.due || 0) <= now); }
+function updateCounts(){
+  $('vocabCount').textContent = state.vocab.length;
+  $('vocabCount').classList.toggle('zero', state.vocab.length === 0);
+  const due = dueCards().length;
+  $('dueCount').textContent = due;
+  $('dueCount').classList.toggle('zero', due === 0);
+  updateSideFoot();
+}
+
+/* Corrections de papa (page relecture) appliquées au carnet */
+async function loadRelectures(){
+  if(AUTONOME) return;
+  try{
+    const r = await fetch('/api/relectures');
+    const j = await r.json();
+    relMap = {};
+    for(const it of Object.values(j.items || {})) relMap[normKey(it.texte_ar)] = it;
+  }catch(e){}
+}
+function applyRelectures(){
+  let changed = false;
+  for(const w of state.vocab){
+    const rel = relMap[normKey(w.ar)];
+    if(!rel) continue;
+    if(rel.statut === 'ok' && !w.valide){ w.valide = true; w.maj = Date.now(); changed = true; }
+    if((rel.statut === 'corrige' || rel.statut === 'fes') && (rel.correction_ar || rel.correction_lat)){
+      const newAr = rel.correction_ar || w.ar;
+      if(newAr !== w.ar || (rel.correction_lat && rel.correction_lat !== w.lat) || !w.valide){
+        state.supprimes[normKey(w.ar)] = Date.now();      // l'ancienne forme ne doit pas revenir lors d'une fusion
+        w.ar_avant = w.ar_avant || w.ar;
+        w.ar = newAr;
+        if(rel.correction_lat) w.lat = rel.correction_lat;
+        w.valide = true; w.maj = Date.now(); changed = true;
+        delete state.supprimes[normKey(w.ar)];
+      }
+    }
+  }
+  if(changed){ scheduleSave(); updateCounts(); }
+}
+
+/* =====================================================================
+   Révision (cartes, méthode des boîtes de Leitner)
+   ===================================================================== */
+let rv = {queue: [], i: 0, revealed: false, ok: 0, total: 0};
+function shuffle(a){ for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function openReview(all){
+  applyRelectures();
+  const cards = shuffle(all ? [...state.vocab] : dueCards()).slice(0, 20);
+  rv = {queue: cards.map(w => ({w, dir: Math.random() < 0.5 ? 'fr' : 'ar', again: false})), i: 0, revealed: false, ok: 0, total: cards.length};
+  renderReview();
+  openPanel('reviewPanel');
+}
+function nextDueText(){
+  const next = state.vocab.map(w => w.due || 0).filter(d => d > Date.now()).sort((a, b) => a - b)[0];
+  if(!next) return '';
+  const days = Math.ceil((next - Date.now()) / DAY);
+  return days <= 1 ? 'Prochaine révision : demain.' : `Prochaine révision dans ${days} jours.`;
+}
+function renderReview(){
+  const body = $('reviewBody');
+  if(!state.vocab.length){
+    body.innerHTML = `<div class="empty-state"><span class="big">🃏</span>Ton carnet est vide : discute avec Kif-Kif pour collecter des mots, puis reviens ici.</div>`;
+    return;
+  }
+  if(rv.i >= rv.queue.length){
+    body.innerHTML = rv.total
+      ? `<div class="empty-state"><span class="big">🎉</span>Révision terminée !<br>${rv.ok} bonne(s) réponse(s) du premier coup sur ${rv.total}.<br>${nextDueText()}</div>
+         <div class="review-btns"><button class="big-btn main" onclick="closePanel('reviewPanel')">Retour à la conversation</button></div>`
+      : `<div class="empty-state"><span class="big">👌</span>Rien à réviser pour l'instant.<br>${nextDueText()}</div>
+         <div class="review-btns"><button class="big-btn" onclick="openReview(true)">Réviser tout le carnet quand même</button></div>`;
+    updateCounts();
+    return;
+  }
+  const {w, dir} = rv.queue[rv.i];
+  const front = dir === 'fr'
+    ? `<div class="q-label">Comment dit-on en darija…</div><div class="big-fr">${escapeHtml(w.fr || '?')}</div>`
+    : `<div class="q-label">Que veut dire…</div><div class="darija-lat optional">${escapeHtml(w.lat)}</div><div class="big-ar">${escapeHtml(w.ar)}</div>
+       <div><button class="listen-btn primary" data-idle="▶ écouter" onclick="speak(rvWord().ar, this)">▶ écouter</button></div>`;
+  const back = dir === 'fr'
+    ? `<div class="darija-lat">${escapeHtml(w.lat)}</div><div class="big-ar">${escapeHtml(w.ar)}</div>
+       <button class="listen-btn primary" id="rvListen" data-idle="▶ écouter" onclick="speak(rvWord().ar, this)">▶ écouter</button>`
+    : `<div class="big-fr">${escapeHtml(w.fr || '?')}</div>`;
+  const pct = Math.round(rv.i / rv.queue.length * 100);
+  body.innerHTML = `<div class="progress">Carte ${rv.i + 1} / ${rv.queue.length}<div class="progress-bar"><div style="width:${pct}%"></div></div></div>
+    <div class="review-card">${front}
+      ${rv.revealed
+        ? `<div class="answer">${back}</div>
+           <div class="review-btns"><button class="big-btn ko" id="rvKo" onclick="answerCard(false)">❌ À revoir</button>
+           <button class="big-btn ok" id="rvOk" onclick="answerCard(true)">✅ Je savais</button></div>`
+        : `<div class="review-btns"><button class="big-btn main" id="rvShow" onclick="revealCard()">Voir la réponse</button></div>`}
+    </div>
+    <div class="muted" style="text-align:center">Essaie de répondre à voix haute avant de retourner la carte.</div>`;
+}
+function rvWord(){ return rv.queue[rv.i].w; }
+function revealCard(){
+  rv.revealed = true; renderReview();
+  if(rv.queue[rv.i].dir === 'fr') speak(rvWord().ar, $('rvListen'));
+}
+function answerCard(ok){
+  const card = rv.queue[rv.i], w = card.w, now = Date.now();
+  if(ok){
+    if(!card.again) rv.ok++;
+    w.box = Math.min((w.box || 0) + 1, INTERVALS.length - 1);
+    w.due = now + INTERVALS[w.box] * DAY;
+  }else{
+    w.box = 0; w.due = now;
+    if(!card.again) rv.queue.push({...card, again: true});   // on la revoit à la fin de la séance
+  }
+  w.maj = now;
+  markToday();
+  rv.i++; rv.revealed = false;
+  stopAudio();
+  renderReview(); updateCounts(); scheduleSave();
+}
+
+/* =====================================================================
+   Panneaux et réglages
+   ===================================================================== */
+function openPanel(id){
+  document.querySelectorAll('.panel.open').forEach(p => { if(p.id !== id) p.classList.remove('open'); });
+  $(id).classList.add('open');
+  $('backdrop').classList.add('show');
+}
+function closePanel(id){
+  $(id).classList.remove('open'); stopAudio();
+  if(!document.querySelector('.panel.open')) $('backdrop').classList.remove('show');
+}
+function closeAllPanels(){ document.querySelectorAll('.panel.open').forEach(p => closePanel(p.id)); }
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeAllPanels(); });
+
+function usageText(u){
+  return `Aujourd'hui : <b>${u.messages || 0}</b> message(s) au tuteur, ~${(u.tokens || 0).toLocaleString('fr-FR')} jetons.<br>`;
+}
+async function openSettings(){
+  openPanel('settingsPanel');
+  renderProgress();
+  if(AUTONOME){
+    updateKeyInfo();
+    let u = {}; try{ u = (JSON.parse(store.get('kifkif-usage', '{}')) || {})[today()] || {}; }catch(e){}
+    $('usageInfo').innerHTML = usageText(u) + `Limites gratuites de Groq : <a href="https://console.groq.com/settings/limits" target="_blank" rel="noopener">voir mes limites</a>. Si le modèle choisi est à sa limite, Kif-Kif passe tout seul sur ${SECOURS.join(', ')}.`;
+    const cur = localModel();
+    try{
+      if(!groqKey()) throw new Error('pas de clé');
+      const j = await groqFetch('/models', null, 20000);
+      let ids = [...new Set((j.data || []).filter(m => m.id && m.active !== false && !MODEL_EXCLUDE.test(m.id)).map(m => m.id))].sort();
+      if(!ids.includes(cur)) ids = [cur, ...ids];
+      $('modelSel').innerHTML = ids.map(m => `<option value="${attr(m)}">${escapeHtml(m)}${m === DEFAULT_MODEL ? ' (par défaut)' : ''}</option>`).join('');
+    }catch(e){
+      $('modelSel').innerHTML = `<option value="${attr(cur)}">${escapeHtml(cur)}</option>`;
+    }
+    $('modelSel').value = cur;
+    return;
+  }
+  try{
+    const c = await (await fetch('/api/config')).json();
+    const u = c.usage_jour || {};
+    $('usageInfo').innerHTML = usageText(u)
+      + (c.groq ? `Les limites gratuites de Groq sont par modèle et par jour (<a href="https://console.groq.com/settings/limits" target="_blank">voir mes limites</a>). Si le modèle choisi est à sa limite, Kif-Kif passe tout seul sur un modèle de secours (${escapeHtml((c.secours || []).join(', ') || 'aucun')}).` : '');
+    const r = await fetch('/api/modeles');
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error || 'erreur');
+    const sel = $('modelSel');
+    const list = j.modeles.includes(j.actuel) ? j.modeles : [j.actuel, ...j.modeles];
+    sel.innerHTML = list.map(m => `<option value="${attr(m)}">${escapeHtml(m)}${m === j.defaut ? ' (par défaut)' : ''}</option>`).join('');
+    sel.value = j.actuel;
+  }catch(e){
+    $('modelSel').innerHTML = `<option value="">(liste indisponible)</option>`;
+  }
+  const n = Object.keys(papaMap).length;
+  $('papaInfo').textContent = n ? `${n} phrase(s) enregistrée(s) par papa.` : "Aucun enregistrement de papa pour l'instant (page de relecture).";
+}
+async function changeModel(){
+  const model = $('modelSel').value;
+  if(!model) return;
+  if(AUTONOME){ store.set('kifkif-model', model); toast('Modèle du tuteur : ' + model); return; }
+  try{
+    const r = await fetch('/api/reglages', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({model})});
+    if(!r.ok) throw new Error();
+    toast('Modèle du tuteur : ' + model);
+  }catch(e){ toast('⚠️ Impossible de changer de modèle'); }
+}
+
+function initPrefs(){
+  const sel = [['voiceSel', 'kifkif-voice', AUTONOME ? 'b:auto' : 'jamal'], ['rateSel', 'kifkif-rate', '-15'], ['micLang', 'kifkif-miclang', 'fr-FR'],
+               ['levelSel', 'kifkif-niveau', 'debutant'], ['tradSel', 'kifkif-trad', 'show'], ['latSel', 'kifkif-lat', 'show'],
+               ['sugSel', 'kifkif-sug', 'ask'], ['micAuto', 'kifkif-micauto2', '0'], ['userArSel', 'kifkif-userar', 'hide'], ['sugFillSel', 'kifkif-sugfill', 'lat'], ['papaSel', 'kifkif-papa', '1'],
+               ['scriptSel', 'kifkif-script', 'lat']];
+  for(const [id, key, def] of sel){
+    const el = $(id);
+    el.value = store.get(key, def);
+    if(!el.value) el.value = def;
+    el.addEventListener('change', e => { store.set(key, e.target.value); applyDisplayPrefs(); });
+  }
+  $('levelSel').addEventListener('change', e => { if(conv){ conv.niveau = e.target.value; scheduleSave(); } toast('Niveau : ' + e.target.selectedOptions[0].text); });
+  $('tradSel').addEventListener('change', () => conv && renderConversation());
+  $('modelSel').addEventListener('change', changeModel);
+  autoplayOn = store.get('kifkif-autoplay', '0') === '1';
+  applyDisplayPrefs();
+}
+function applyDisplayPrefs(){
+  document.body.classList.toggle('hide-lat', $('latSel').value === 'hide');
+  document.body.classList.toggle('ar-first', $('scriptSel').value === 'ar');
+  document.body.classList.toggle('hide-sug', $('sugSel').value === 'hide');
+  document.body.classList.toggle('sug-ask', $('sugSel').value === 'ask');
+  document.body.classList.toggle('hide-user-ar', $('userArSel').value === 'hide');
+  updateAutoplayBtn(); updateSpeedBtn(); updateMicLangBtn();
+}
+function setNav(btn, ic, lbl, on){
+  btn.querySelector('.ic').textContent = ic;
+  btn.querySelector('.lbl').textContent = lbl;
+  btn.classList.toggle('on', !!on);
+}
+function updateAutoplayBtn(){ setNav($('autoplayBtn'), autoplayOn ? '🔊' : '🔇', autoplayOn ? 'Lecture auto : oui' : 'Lecture auto : non', autoplayOn); }
+function toggleAutoplay(){
+  autoplayOn = !autoplayOn;
+  store.set('kifkif-autoplay', autoplayOn ? '1' : '0');
+  updateAutoplayBtn();
+  toast(autoplayOn ? '🔊 Chaque réponse sera lue à voix haute' : '🔇 Lecture automatique désactivée');
+}
+const SPEEDS = [['0', '🐇', 'normale'], ['-15', '🐢', 'lente'], ['-30', '🐌', 'très lente']];
+function updateSpeedBtn(){
+  const s = SPEEDS.find(x => x[0] === $('rateSel').value) || SPEEDS[1];
+  setNav($('speedBtn'), s[1], 'Voix : ' + s[2], false);
+}
+function cycleSpeed(){
+  const i = SPEEDS.findIndex(x => x[0] === $('rateSel').value);
+  const n = SPEEDS[(i + 1) % SPEEDS.length];
+  $('rateSel').value = n[0]; store.set('kifkif-rate', n[0]);
+  updateSpeedBtn();
+  toast(`${n[1]} Voix ${n[2]}`);
+}
+function updateMicLangBtn(){ $('micLangBtn').textContent = $('micLang').value === 'ar-MA' ? 'DA' : 'FR'; $('micLangBtn').title = 'Langue du micro : ' + ($('micLang').value === 'ar-MA' ? 'darija' : 'français') + ' (toucher pour changer)'; }
+function toggleMicLang(){
+  const v = $('micLang').value === 'ar-MA' ? 'fr-FR' : 'ar-MA';
+  $('micLang').value = v; store.set('kifkif-miclang', v);
+  updateMicLangBtn();
+  toast(v === 'ar-MA' ? '🎤 Le micro écoute du darija' : '🎤 Le micro écoute du français');
+}
+
+function downloadBackup(){
+  const data = JSON.stringify({kifkif: 3, date: new Date().toISOString(), ...state}, null, 1);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+  a.download = 'kifkif-sauvegarde-' + (AUTONOME ? 'iphone-' : '') + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function restoreBackup(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const d = JSON.parse(reader.result);
+      if(!Array.isArray(d.vocab)) throw new Error();
+      mergeInto(state, d);
+      updateCounts(); scheduleSave();
+      toast('📤 Sauvegarde fusionnée avec tes données actuelles');
+    }catch(e){ toast('⚠️ Fichier de sauvegarde illisible'); }
+    input.value = '';
+  };
+  reader.readAsText(f);
+}
+
+/* =====================================================================
+   Voix : papa (enregistrements), serveur (Microsoft) ou navigateur / téléphone
+   ===================================================================== */
+async function loadPapaRecordings(){
+  if(AUTONOME) return;
+  try{
+    const j = await (await fetch('/api/enregistrements')).json();
+    papaMap = {};
+    for(const e of j.enregistrements || []) papaMap[e.cle] = e.url;
+  }catch(e){}
+}
+
+function setBtn(btn, state){
+  if(!btn) return;
+  const idle = btn.dataset.idle || '▶ écouter';
+  if(state === 'idle'){ btn.classList.remove('speaking'); btn.textContent = idle; }
+  else if(state === 'loading'){ btn.classList.add('speaking'); btn.textContent = '… voix'; }
+  else { btn.classList.add('speaking'); btn.textContent = idle.length <= 2 ? '🔊' : (state === 'papa' ? '🔊 papa…' : '🔊 lecture…'); }
+}
+function stopAudio(){
+  try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+  if(currentAudio){ try{ currentAudio.pause(); }catch(e){} currentAudio = null; }
+  if(currentBtn){ setBtn(currentBtn, 'idle'); currentBtn = null; }
+}
+
+let serverDownUntil = 0;
+function browserVoices(){
+  if(!('speechSynthesis' in window)) return [];
+  let vs = [];
+  try{ vs = speechSynthesis.getVoices() || []; }catch(e){}
+  return vs.filter(v => v && v.name && v.lang && !/undefined/i.test(v.name + v.lang));
+}
+function browserMoroccanVoices(){ return browserVoices().filter(v => /^ar[-_]MA$/i.test(v.lang)); }
+function browserArabicVoices(){
+  const rank = v => /^ar[-_]MA$/i.test(v.lang) ? 0 : /^ar[-_](DZ|TN|LY)$/i.test(v.lang) ? 1 : 2;
+  return browserVoices().filter(v => /^ar([-_]|$)/i.test(v.lang)).sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+}
+function refreshBrowserVoices(){
+  const sel = $('voiceSel');
+  Array.from(sel.querySelectorAll('option[data-browser]')).forEach(o => o.remove());
+  const seen = new Set();
+  if(AUTONOME){
+    sel.querySelectorAll('.srv-voice').forEach(o => o.remove());
+    const auto = document.createElement('option');
+    auto.value = 'b:auto'; auto.dataset.browser = '1'; auto.textContent = 'Automatique (meilleure voix arabe)';
+    sel.appendChild(auto);
+    for(const v of browserArabicVoices()){
+      if(seen.has(v.name)) continue;
+      seen.add(v.name);
+      const o = document.createElement('option');
+      o.value = 'b:' + v.name; o.dataset.browser = '1';
+      o.textContent = `${v.name.replace(/^Microsoft\s+/i, '').replace(/\s*\(.*\)$/, '')} (${v.lang})`;
+      sel.appendChild(o);
+    }
+    const n = seen.size, ma = browserMoroccanVoices().length;
+    $('voiceInfo').textContent = !n ? "Aucune voix arabe trouvée sur ce téléphone : ajoute-en une dans Réglages iPhone → Accessibilité → Contenu énoncé → Voix → Arabe."
+      : ma ? 'Voix marocaine disponible sur ce téléphone 👍'
+      : "Pas de voix marocaine sur iPhone : Kif-Kif lit avec une voix arabe (accent du Golfe). Pour mieux t'entraîner à l'accent, écoute aussi sur le PC.";
+  }else{
+    for(const v of browserMoroccanVoices()){
+      if(seen.has(v.name)) continue;
+      seen.add(v.name);
+      const o = document.createElement('option');
+      o.value = 'b:' + v.name; o.dataset.browser = '1';
+      o.textContent = '🌐 ' + v.name.replace(/^Microsoft\s+/i, '').split(/\s+/)[0] + ' (navigateur)';
+      sel.appendChild(o);
+    }
+  }
+  const saved = store.get('kifkif-voice', AUTONOME ? 'b:auto' : 'jamal');
+  if(Array.from(sel.options).some(o => o.value === saved)) sel.value = saved;
+  else sel.value = AUTONOME ? 'b:auto' : 'jamal';
+}
+function pickBrowserVoice(){
+  const pool = AUTONOME ? browserArabicVoices() : browserMoroccanVoices();
+  const sel = $('voiceSel').value;
+  if(sel.startsWith('b:') && sel !== 'b:auto'){ const f = pool.find(v => v.name === sel.slice(2)); if(f) return f; }
+  if(AUTONOME) return pool[0] || null;
+  const want = new RegExp(sel.startsWith('b:') ? 'jamal' : sel, 'i');
+  return pool.find(v => want.test(v.name)) || pool[0] || null;
+}
+function speakBrowser(text, voice, btn){
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    if(voice){ try{ u.voice = voice; }catch(e){} }
+    u.lang = (voice && voice.lang) || 'ar-SA';
+    u.rate = Math.max(0.5, 1 + parseInt($('rateSel').value, 10) / 100);
+    const done = () => { if(currentBtn === btn) currentBtn = null; setBtn(btn, 'idle'); };
+    u.onend = done; u.onerror = done;
+    currentBtn = btn; setBtn(btn, 'playing');
+    speechSynthesis.speak(u);
+  }catch(e){
+    setBtn(btn, 'idle'); currentBtn = null;
+    showVoiceWarning('Lecture audio indisponible.', 8000);
+  }
+}
+function playUrl(url, btn, label){
+  const a = new Audio(url);
+  currentAudio = a;
+  const done = () => { if(currentAudio === a){ currentAudio = null; currentBtn = null; } setBtn(btn, 'idle'); };
+  a.onended = done; a.onerror = done;
+  try{ a.playbackRate = Math.max(0.6, 1 + parseInt($('rateSel').value, 10) / 100); }catch(e){}
+  setBtn(btn, label || 'playing');
+  return a.play().catch(e => { console.error('play error', e); done(); showVoiceWarning("Le navigateur a bloqué la lecture : touche ▶ écouter.", 6000); });
+}
+
+async function speak(text, btn){
+  if(!text) return;
+  stopAudio();
+  currentBtn = btn;
+  if(AUTONOME){
+    if(!('speechSynthesis' in window)){ showVoiceWarning('Lecture audio indisponible sur ce navigateur.', 6000); return; }
+    speakBrowser(text, pickBrowserVoice(), btn);
+    return;
+  }
+  const papaUrl = prefs().papa ? papaMap[normKey(text)] : null;
+  if(papaUrl){ return playUrl(papaUrl, btn, 'papa'); }
+  const choice = $('voiceSel').value;
+  if(choice.startsWith('b:') || Date.now() < serverDownUntil){
+    const bv = pickBrowserVoice();
+    if(bv){ speakBrowser(text, bv, btn); return; }
+  }
+  setBtn(btn, 'loading');
+  let blob = null, err = null;
+  try{
+    const r = await fetch('/api/tts', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text, voice: choice.startsWith('b:') ? 'jamal' : choice, rate: parseInt($('rateSel').value, 10)})
+    });
+    if(!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.error || ('Erreur voix ' + r.status)); }
+    blob = await r.blob();
+  }catch(e){ err = e; }
+  if(!blob){
+    console.error('TTS error', err);
+    const bv = pickBrowserVoice();
+    if(bv){
+      serverDownUntil = Date.now() + 5 * 60 * 1000;
+      showVoiceWarning("La voix du serveur ne répond pas : j'utilise la voix marocaine du navigateur.", 6000);
+      speakBrowser(text, bv, btn);
+      return;
+    }
+    setBtn(btn, 'idle'); currentAudio = null; currentBtn = null;
+    let msg = (err && err.message) || 'Lecture audio indisponible.';
+    if(!/Edg\//.test(navigator.userAgent)) msg += " Astuce : ouvre cette page dans Microsoft Edge (il a une voix marocaine intégrée).";
+    else msg += " (Edge ne propose pas de voix marocaine sur ce PC : voir LISEZMOI.txt.)";
+    showVoiceWarning(msg, 20000);
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = new Audio(url);
+  currentAudio = a;
+  const done = () => { if(currentAudio === a){ currentAudio = null; currentBtn = null; } setBtn(btn, 'idle'); URL.revokeObjectURL(url); };
+  a.onended = done; a.onerror = done;
+  setBtn(btn, 'playing');
+  try{ await a.play(); }
+  catch(e){ console.error('play error', e); done(); showVoiceWarning("Le navigateur a bloqué la lecture automatique : touche ▶ écouter.", 6000); }
+}
+function playTTS(idx, btn){ speak(ttsTexts[idx], btn); }
+
+function showVoiceWarning(msg, ms){
+  const el = $('voiceWarning');
+  el.textContent = msg; el.style.display = 'block';
+  clearTimeout(showVoiceWarning._t);
+  showVoiceWarning._t = setTimeout(() => { el.style.display = 'none'; }, ms || 5000);
+}
+
+/* ---------- Répéter au micro (expérimental) ---------- */
+function normAr(t){
+  return String(t || '').replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+}
+function similarity(a, b){ return Math.max(0, levRatio(normAr(a), normAr(b))); }
+function practice(idx, btn){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const out = $('practice' + idx);
+  if(!SR){ out.textContent = AUTONOME ? "Reconnaissance vocale indisponible ici (ouvre Kif-Kif dans Safari plutôt que depuis l'écran d'accueil)." : 'Micro non disponible dans ce navigateur : utilise Chrome ou Edge.'; return; }
+  stopAudio();
+  const target = ttsTexts[idx];
+  const rec = new SR();
+  rec.lang = 'ar-MA'; rec.interimResults = false; rec.maxAlternatives = 3;
+  btn.classList.add('speaking'); btn.textContent = '🎙 parle…';
+  out.textContent = 'Dis la phrase en darija…';
+  let got = false;
+  rec.onresult = (e) => {
+    got = true;
+    let best = {t: '', s: 0};
+    for(const alt of e.results[0]){ const s = similarity(alt.transcript, target); if(s > best.s || !best.t) best = {t: alt.transcript, s}; }
+    const pct = Math.round(best.s * 100);
+    const verdict = pct >= 80 ? '👏 Très bien !' : pct >= 55 ? '👍 Presque !' : '🔁 Réessaie en écoutant d\'abord';
+    out.innerHTML = `Entendu : « ${escapeHtml(best.t)} » — <span class="score">${pct} %</span> ${verdict}`;
+  };
+  rec.onerror = (e) => {
+    got = true;
+    out.textContent = e.error === 'not-allowed' ? "Micro refusé : autorise-le (cadenas dans la barre d'adresse, ou Réglages iPhone → Safari → Micro)." :
+      e.error === 'no-speech' ? "Je n'ai rien entendu, réessaie." : `Reconnaissance indisponible (${e.error}).`;
+  };
+  rec.onend = () => { btn.classList.remove('speaking'); btn.textContent = btn.dataset.idle; if(!got) out.textContent = "Je n'ai rien entendu, réessaie."; };
+  try{ rec.start(); }catch(e){ rec.onend(); }
+}
+
+/* ---------- Micro pour écrire (reconnaissance vocale du navigateur) ---------- */
+function initSpeechRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    $('micBtn').classList.add('off');
+    $('micBtn').title = "Dictée du navigateur indisponible ici";
+    return;
+  }
+  recognition = new SR();
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+  recognition.onaudiostart = () => { toast('🎙 Je t\'écoute, parle maintenant', 2200); };
+  recognition.onresult = (e) => {
+    let interim = '';
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      const r = e.results[i];
+      if(r.isFinal) micFinal += r[0].transcript + ' '; else interim += r[0].transcript;
+    }
+    $('textInput').value = ((micBase ? micBase + ' ' : '') + micFinal + interim).trim();
+    autoResize();
+  };
+  recognition.onerror = (e) => {
+    micErr = true;
+    if(e.error === 'not-allowed' || e.error === 'service-not-allowed') showVoiceWarning(AUTONOME ? "Micro refusé : autorise-le dans Réglages iPhone → Safari → Micro, ou utilise la dictée 🎤 du clavier." : "Micro refusé — autorise le micro pour cette page (cadenas dans la barre d'adresse), ou tape ton message.", 8000);
+    else if(e.error === 'no-speech') showVoiceWarning("Je n'ai rien entendu, réessaie.");
+    else if(e.error === 'audio-capture') showVoiceWarning("Aucun micro détecté : branche-le ou choisis-le dans les réglages Windows (Son > Entrée).", 8000);
+    else if(e.error === 'network') showVoiceWarning("Le service de reconnaissance vocale du navigateur est injoignable (network). Essaie dans Chrome (http://localhost:8000) ou tape ton message.", 9000);
+    else if(e.error === 'language-not-supported') showVoiceWarning("Ce navigateur ne reconnaît pas cette langue : mets le micro sur FR.", 8000);
+    else if(e.error !== 'aborted') showVoiceWarning("Reconnaissance vocale indisponible (" + e.error + ") — tape ton message.", 7000);
+    stopRecordingUI();
+  };
+  recognition.onend = () => {
+    stopRecordingUI();
+    if(!micErr && micFinal.trim() && $('micAuto').value === '1'){ micFinal = ''; sendMessage(); }
+  };
+}
+var micFinal = '', micBase = '', micErr = false;
+function stopRecordingUI(){ isRecording = false; $('micBtn').classList.remove('recording'); }
+function toggleMic(){
+  if(!recognition){
+    showVoiceWarning(AUTONOME ? "Dictée indisponible ici : utilise la touche 🎤 du clavier de l'iPhone (puis relis et envoie)." : "Micro non disponible dans ce navigateur : utilise Chrome ou Edge.", 7000);
+    $('textInput').focus();
+    return;
+  }
+  try{
+    if(isRecording){ recognition.stop(); stopRecordingUI(); return; }
+    recognition.lang = $('micLang').value;
+    micFinal = ''; micErr = false; micBase = $('textInput').value.trim();
+    recognition.start();
+    isRecording = true;
+    $('micBtn').classList.add('recording');
+  }catch(e){
+    console.error('mic error', e);
+    showVoiceWarning("Impossible de démarrer le micro ici.");
+    stopRecordingUI();
+  }
+}
+
+/* =====================================================================
+   Démarrage
+   ===================================================================== */
+function setupAutonome(){
+  // icône et nom pour « Sur l'écran d'accueil »
+  const add = (rel, href) => { const l = document.createElement('link'); l.rel = rel; l.href = href; document.head.appendChild(l); };
+  add('apple-touch-icon', 'apple-touch-icon.png');
+  add('manifest', 'manifest.webmanifest');
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+}
+async function init(){
+  if(AUTONOME) setupAutonome();
+  if(window.innerWidth < 500) $('textInput').placeholder = 'Français ou darija…';
+  initPrefs();
+  initSpeechRecognition();
+  try{
+    if('speechSynthesis' in window){
+      speechSynthesis.getVoices();
+      speechSynthesis.addEventListener('voiceschanged', refreshBrowserVoices);
+    }
+  }catch(e){}
+  refreshBrowserVoices();
+  await Promise.all([loadScenarios(), loadState(), loadRelectures(), loadPapaRecordings()]);
+  applyRelectures();
+  updateCounts();
+  const saved = state.conversations.find(c => c.id === store.get('kifkif-conv', ''));
+  const c = saved || latestConversation('libre') || createConversation('libre');
+  setConversation(c);
+  if(AUTONOME) return;
+  try{
+    const cfg = await (await fetch('/api/config')).json();
+    if(!cfg.llm_ready){
+      addTutorNote("⚠️ Il manque la clé du tuteur : ouvre le fichier reglages.txt, colle ta clé après LLM_API_KEY=, enregistre, puis relance le serveur (voir LISEZMOI.txt).");
+    }
+  }catch(e){ /* serveur injoignable : les erreurs s'afficheront à l'envoi */ }
+}
+init();
+</script>
+</body>
+</html>
