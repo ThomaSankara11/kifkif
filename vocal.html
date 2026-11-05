@@ -89,6 +89,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .micro.ecoute{background:var(--listen);box-shadow:0 0 0 10px rgba(61,79,209,.15),0 6px 18px rgba(61,79,209,.35)}
 .micro:disabled{opacity:.45}
 .aide{color:var(--muted);font-size:13px;min-height:18px}
+.chip-langue{font-size:12px;color:var(--muted);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px}
 
 .saisie{width:100%;max-width:620px;display:flex;gap:8px;align-items:flex-end}
 .saisie textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:11px 14px;font:inherit;font-size:16px;min-height:46px;max-height:120px;outline:none}
@@ -196,6 +197,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
     </button>
     <div class="aide" id="aide">Touche le micro pour parler</div>
+    <button class="chip-langue" id="chipLangue" title="Changer la langue du micro"></button>
   </div>
 
   <div class="vous" id="vous"></div>
@@ -226,6 +228,15 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   <div class="champ">
     <label for="modeleSTT">Modèle de reconnaissance vocale</label>
     <input id="modeleSTT" placeholder="whisper-large-v3">
+  </div>
+  <div class="champ">
+    <label for="langueMicro">Langue que je parle au micro</label>
+    <select id="langueMicro">
+      <option value="ar">Darija (recommandé pour parler darija)</option>
+      <option value="fr">Français</option>
+      <option value="auto">Automatique (peut se tromper : turc, etc.)</option>
+    </select>
+    <small>Dire à Whisper la langue évite qu'il devine une mauvaise langue. Tu peux aussi la changer en touchant la pastille sous le micro.</small>
   </div>
   <div class="champ">
     <label for="ecritureDictee">Écriture de ce que je dis au micro</label>
@@ -282,7 +293,7 @@ const LS = {
 /* ---------- Réglages ---------- */
 const reglages = Object.assign({
   cle:'', modeleLLM:'llama-3.3-70b-versatile', modeleSTT:'whisper-large-v3',
-  codeRelais:'', voix:'', vitesse:0.9, afficherArabe:false, silence:1.3, auto:false, chiffres:true, ecritureDictee:'arabe'
+  codeRelais:'', voix:'', vitesse:0.9, afficherArabe:false, silence:1.3, auto:false, chiffres:true, ecritureDictee:'arabe', langueMicro:'ar'
 }, LS.get('kifkif_vocal_reglages', {}));
 function sauverReglages(){ LS.set('kifkif_vocal_reglages', reglages); }
 
@@ -744,6 +755,14 @@ function arreterEcoute(annuler=false){
   if(enregistreur && enregistreur.state!=='inactive'){ enregistreur._annule=annuler; enregistreur.stop(); }
   if(annuler){ setEtat('repos'); toast("Je n'ai rien entendu."); }
 }
+// Amorce donnée à Whisper : quelques mots darija écrits comme il faut + la dernière phrase du tuteur (contexte).
+function amorceWhisper(langue){
+  if(langue==='fr') return 'Conversation en français sur la darija marocaine : salam, labas, chno, bghit, wakha.';
+  let a = 'دارجة مغربية: السلام عليكم، لاباس؟ كولشي مزيان، الحمد لله. شنو كتدير؟ بغيت نشرب قهوة. واخا، safi، بزاف، دابا، شحال، فين، علاش.';
+  const t = derniereReponse && derniereReponse.arabe ? String(derniereReponse.arabe).trim() : '';
+  if(t) a += ' ' + t.slice(0,160);
+  return a;
+}
 async function traiterEnregistrement(mime){
   if(enregistreur && enregistreur._annule) return;
   const blob = new Blob(morceaux,{type:mime});
@@ -755,7 +774,9 @@ async function traiterEnregistrement(mime){
       const fd = new FormData();
       fd.append('file', blob, 'micro.'+ext);
       fd.append('model', reglages.modeleSTT);
-      fd.append('prompt', 'Darija marocaine et français mélangés. Salam, labas, chno, bghit, wakha, safi, twalit.');
+      const langue = reglages.langueMicro||'ar';
+      if(langue!=='auto') fd.append('language', langue);
+      fd.append('prompt', amorceWhisper(langue));
       fd.append('response_format','json');
       return fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+reglages.cle},body:fd});
     };
@@ -831,12 +852,14 @@ function ouvrirPanneau(sel){ $('#voile').style.display='block'; $(sel).classList
 function fermerPanneaux(){ $('#voile').style.display='none'; document.querySelectorAll('.panneau').forEach(p=>p.classList.remove('ouvert')); }
 function remplirReglages(){
   $('#cleGroq').value=reglages.cle; $('#codeRelais').value=reglages.codeRelais||''; $('#modeleLLM').value=reglages.modeleLLM; $('#modeleSTT').value=reglages.modeleSTT;
-  $('#ecritureDictee').value=reglages.ecritureDictee||'arabe';
+  $('#ecritureDictee').value=reglages.ecritureDictee||'arabe'; $('#langueMicro').value=reglages.langueMicro||'ar';
   $('#vitesse').value=reglages.vitesse; $('#vitesseVal').textContent=reglages.vitesse;
   $('#silence').value=reglages.silence; $('#silenceVal').textContent=reglages.silence;
   $('#afficherArabe').checked=reglages.afficherArabe; chargerVoix();
 }
+const NOMS_LANGUE = {ar:'Micro : darija', fr:'Micro : français', auto:'Micro : auto'};
 function appliquerAffichage(){
+  $('#chipLangue').textContent = NOMS_LANGUE[reglages.langueMicro||'ar'];
   $('#motArabe').style.display = reglages.afficherArabe ? '' : 'none';
   $('#switchAuto').classList.toggle('on', reglages.auto);
   $('#switchChiffres').classList.toggle('on', reglages.chiffres);
@@ -863,10 +886,11 @@ $('#silence').oninput = e=>$('#silenceVal').textContent=e.target.value;
 $('#btnSauverReglages').onclick = ()=>{
   reglages.cle=$('#cleGroq').value.trim(); reglages.codeRelais=$('#codeRelais').value.trim(); reglages.modeleLLM=$('#modeleLLM').value.trim()||'llama-3.3-70b-versatile';
   reglages.modeleSTT=$('#modeleSTT').value.trim()||'whisper-large-v3'; reglages.voix=$('#voix').value; reglages._voixChoisie=true;
-  reglages.ecritureDictee=$('#ecritureDictee').value;
+  reglages.ecritureDictee=$('#ecritureDictee').value; reglages.langueMicro=$('#langueMicro').value;
   reglages.vitesse=+$('#vitesse').value; reglages.silence=+$('#silence').value; reglages.afficherArabe=$('#afficherArabe').checked;
   sauverReglages(); appliquerAffichage(); fermerPanneaux(); toast('Réglages enregistrés',1500);
 };
+$('#chipLangue').onclick = ()=>{ const ordre=['ar','fr','auto']; const i=ordre.indexOf(reglages.langueMicro||'ar'); reglages.langueMicro=ordre[(i+1)%3]; sauverReglages(); appliquerAffichage(); toast(NOMS_LANGUE[reglages.langueMicro],1500); };
 $('#switchAuto').onclick = ()=>{ reglages.auto=!reglages.auto; sauverReglages(); appliquerAffichage(); toast(reglages.auto?'Envoi automatique activé':'Envoi manuel : tu relis avant d’envoyer',2000); };
 $('#switchChiffres').onclick = ()=>{ reglages.chiffres=!reglages.chiffres; sauverReglages(); appliquerAffichage(); toast(reglages.chiffres?'Phonétique avec chiffres (ta3ban, 7lib…) dès la prochaine réponse':"Phonétique sans chiffres (ta'ban, hlib…) dès la prochaine réponse",2800); };
 const toucherMicro = ()=>{ debloquerAudio(); if(etat==='ecoute') arreterEcoute(); else if(etat==='parle'){ arreterVoix(); setEtat('repos'); demarrerEcoute(); } else demarrerEcoute(); };
