@@ -28,7 +28,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .btn-secondaire{color:var(--muted);text-decoration:underline;font-size:14px}
 
 /* ---------- Mode vocal ---------- */
-#vocal{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 12px)}
+#vocal{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 12px)}
 #vocal.ouvert{display:flex}
 .barre-haut{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;min-height:44px}
 .icones{display:flex;gap:6px;min-width:110px}
@@ -49,7 +49,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .switch.on{background:var(--ink)}
 .switch.on::after{left:19px}
 
-.carte{margin-top:28px;text-align:center;min-height:200px}
+.carte{margin-top:28px;text-align:center;min-height:200px;flex:none}
 .etiquette{font-size:12px;letter-spacing:.12em;color:var(--muted);font-weight:500}
 .mot{font-variant-numeric:lining-nums;font-family:"Playfair Display",serif;font-weight:700;font-size:clamp(44px,9vw,68px);line-height:1.05;margin:8px 0 2px}
 .arabe{font-family:"Noto Naskh Arabic",serif;font-size:30px;direction:rtl;margin:2px 0}
@@ -60,13 +60,14 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .rond.actif{background:var(--ink);color:#fff;border-color:var(--ink)}
 .rond.actif svg{fill:currentColor}
 
-.sous-titres{max-width:560px;width:100%;margin-top:22px;text-align:center;min-height:70px}
+.sous-titres{max-width:560px;width:100%;margin-top:22px;text-align:center;min-height:70px;flex:none}
 .st-darij{font-size:18px;font-weight:500;cursor:pointer}
 .st-fr{color:var(--muted);font-size:15px;margin-top:4px}
 .st-correction{margin-top:10px;font-size:14px;background:#fff6e8;border:1px solid #f0dcb8;border-radius:12px;padding:8px 12px;display:none;text-align:left}
 .st-correction b{color:var(--terra)}
 
-.centre{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;width:100%}
+.centre{flex:1 0 auto;min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;width:100%}
+.barre-haut,.vous,.saisie,.fermer{flex:none}
 .capsules{display:flex;gap:12px;align-items:center;height:130px;cursor:pointer}
 .capsule{width:38px;height:62px;border-radius:999px;position:relative;overflow:hidden;transition:height .09s ease-out;box-shadow:inset 0 -6px 10px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.12)}
 .capsule::before{content:"";position:absolute;inset:0;
@@ -98,6 +99,20 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .vous b{color:var(--ink);font-weight:600}
 .fermer{margin-top:10px;font-size:13px;color:var(--muted);padding:6px 14px;border-radius:999px}
 .fermer:hover{background:#ece8e1}
+/* Petits écrans (iPhone dans Safari) : on compacte pour que tout tienne sans chevauchement */
+@media (max-height:800px){
+  .carte{margin-top:10px;min-height:0}
+  .mot{font-size:clamp(38px,9vw,52px);margin:4px 0 0}
+  .actions{margin-top:8px}
+  .rond{width:40px;height:40px}
+  .sous-titres{margin-top:10px;min-height:0}
+  .centre{min-height:190px;gap:12px}
+  .capsules{height:84px;gap:10px}
+  .capsule{width:32px;height:44px}
+  .micro{width:66px;height:66px}
+  .vous{margin-bottom:2px}
+  .fermer{margin-top:4px}
+}
 
 /* ---------- Panneaux ---------- */
 .voile{position:fixed;inset:0;background:rgba(20,18,16,.35);display:none;z-index:20}
@@ -304,7 +319,8 @@ function niveauxCapsules(niv){ // niv: 0..1
   const poids=[.75,1,.9,.65];
   capsEls.forEach((c,i)=>{
     const j = niv*poids[i]*(0.75+Math.random()*0.5);
-    c.style.height = Math.round(48 + Math.min(1,j)*82)+'px';
+    const max = (c.parentElement && c.parentElement.clientHeight) || 130;   // hauteur disponible
+    c.style.height = Math.round(max*0.37 + Math.min(1,j)*max*0.63)+'px';
   });
 }
 function resetCapsules(){ capsEls.forEach(c=>c.style.height=''); }
