@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kif-Kif vocal">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Kif-Kif · Mode vocal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&family=Noto+Naskh+Arabic:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4f0; --card:#ffffff; --ink:#1d1b19; --muted:#8a847c; --line:#e7e2da;
+  --terra:#b5532f; --sable:#d6a65a; --bleu:#1f4fa8; --terra2:#9e3f24;
+  --listen:#3d4fd1; --think:#d64545; --speak:#d64545;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+body{overflow:hidden}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+
+/* ---------- Écran d'accueil ---------- */
+#accueil{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px;text-align:center}
+#accueil h1{font-family:"Playfair Display",serif;font-size:44px;margin:0}
+#accueil p{color:var(--muted);margin:0;max-width:340px;line-height:1.5}
+.btn-principal{background:var(--ink);color:#fff;padding:14px 26px;border-radius:999px;font-weight:600}
+.btn-secondaire{color:var(--muted);text-decoration:underline;font-size:14px}
+
+/* ---------- Mode vocal ---------- */
+#vocal{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 12px)}
+#vocal.ouvert{display:flex}
+.barre-haut{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.icones{display:flex;gap:6px;min-width:110px}
+.ico{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.ico:hover{background:#ece8e1}
+.ico svg{width:20px;height:20px}
+.pastille{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.04);white-space:nowrap}
+.pastille i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pastille[data-etat=ecoute] i{background:var(--listen);animation:pulse 1s infinite}
+.pastille[data-etat=reflexion] i{background:var(--think);animation:pulse .6s infinite}
+.pastille[data-etat=parle] i{background:var(--speak)}
+@keyframes pulse{50%{opacity:.3}}
+.options{display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:110px}
+.interrupteur{display:flex;align-items:center;gap:8px;justify-content:flex-end;color:var(--muted);font-size:12px}
+.interrupteur svg{width:18px;height:18px}
+.switch{width:38px;height:22px;border-radius:999px;background:#ddd8d0;position:relative;transition:.2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+.switch.on{background:var(--ink)}
+.switch.on::after{left:19px}
+
+.carte{margin-top:28px;text-align:center;min-height:200px}
+.etiquette{font-size:12px;letter-spacing:.12em;color:var(--muted);font-weight:500}
+.mot{font-variant-numeric:lining-nums;font-family:"Playfair Display",serif;font-weight:700;font-size:clamp(44px,9vw,68px);line-height:1.05;margin:8px 0 2px}
+.arabe{font-family:"Noto Naskh Arabic",serif;font-size:30px;direction:rtl;margin:2px 0}
+.trad{color:var(--muted);font-size:17px;margin-top:4px}
+.actions{display:flex;gap:14px;justify-content:center;margin-top:16px}
+.rond{width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.rond svg{width:19px;height:19px}
+.rond.actif{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rond.actif svg{fill:currentColor}
+
+.sous-titres{max-width:560px;width:100%;margin-top:22px;text-align:center;min-height:70px}
+.st-darij{font-size:18px;font-weight:500;cursor:pointer}
+.st-fr{color:var(--muted);font-size:15px;margin-top:4px}
+.st-correction{margin-top:10px;font-size:14px;background:#fff6e8;border:1px solid #f0dcb8;border-radius:12px;padding:8px 12px;display:none;text-align:left}
+.st-correction b{color:var(--terra)}
+
+.centre{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;width:100%}
+.capsules{display:flex;gap:12px;align-items:center;height:130px;cursor:pointer}
+.capsule{width:38px;height:62px;border-radius:999px;position:relative;overflow:hidden;transition:height .09s ease-out;box-shadow:inset 0 -6px 10px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.12)}
+.capsule::before{content:"";position:absolute;inset:0;
+  background:
+   radial-gradient(circle at 50% 50%,rgba(255,255,255,.55) 0 2px,transparent 3px) 0 0/14px 14px,
+   repeating-linear-gradient(45deg,rgba(255,255,255,.22) 0 1.5px,transparent 1.5px 10px),
+   repeating-linear-gradient(-45deg,rgba(255,255,255,.22) 0 1.5px,transparent 1.5px 10px);}
+.capsule::after{content:"";position:absolute;left:6px;top:6px;width:8px;height:40%;border-radius:999px;background:linear-gradient(rgba(255,255,255,.45),transparent)}
+.c1{background:var(--terra)}.c2{background:var(--sable)}.c3{background:var(--bleu)}.c4{background:var(--terra2)}
+.capsules.repos .capsule{animation:respire 2.6s ease-in-out infinite}
+.capsules.repos .c2{animation-delay:.25s}.capsules.repos .c3{animation-delay:.5s}.capsules.repos .c4{animation-delay:.75s}
+@keyframes respire{50%{height:72px}}
+.capsules.reflexion .capsule{animation:saute .8s ease-in-out infinite;height:44px}
+.capsules.reflexion .c2{animation-delay:.1s}.capsules.reflexion .c3{animation-delay:.2s}.capsules.reflexion .c4{animation-delay:.3s}
+@keyframes saute{50%{transform:translateY(-12px)}}
+
+.micro{width:74px;height:74px;border-radius:50%;background:#8a4a2b;color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(138,74,43,.35);transition:.15s}
+.micro svg{width:28px;height:28px}
+.micro.ecoute{background:var(--listen);box-shadow:0 0 0 10px rgba(61,79,209,.15),0 6px 18px rgba(61,79,209,.35)}
+.micro:disabled{opacity:.45}
+.aide{color:var(--muted);font-size:13px;min-height:18px}
+
+.saisie{width:100%;max-width:620px;display:flex;gap:8px;align-items:flex-end}
+.saisie textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:11px 14px;font:inherit;font-size:16px;min-height:46px;max-height:120px;outline:none}
+.saisie textarea:focus{border-color:#bdb5aa}
+.envoyer{width:46px;height:46px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;flex:none}
+.envoyer svg{width:18px;height:18px}
+.vous{font-size:13px;color:var(--muted);text-align:center;max-width:620px;min-height:18px;margin-bottom:6px}
+.vous b{color:var(--ink);font-weight:600}
+.fermer{margin-top:10px;font-size:13px;color:var(--muted);padding:6px 14px;border-radius:999px}
+.fermer:hover{background:#ece8e1}
+
+/* ---------- Panneaux ---------- */
+.voile{position:fixed;inset:0;background:rgba(20,18,16,.35);display:none;z-index:20}
+.panneau{position:fixed;top:0;bottom:0;width:min(420px,100%);background:var(--bg);z-index:21;padding:22px;overflow:auto;transform:translateX(-105%);transition:.25s;box-shadow:0 0 30px rgba(0,0,0,.15)}
+.panneau.ouvert{transform:none}
+.panneau h2{font-family:"Playfair Display",serif;margin:0 0 16px;display:flex;justify-content:space-between;align-items:center}
+.champ{margin-bottom:16px}
+.champ label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.champ input,.champ select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+.champ small{color:var(--muted);display:block;margin-top:4px;line-height:1.4}
+.ligne{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mot-carnet{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mot-carnet .p{font-family:"Playfair Display",serif;font-size:22px;font-weight:700}
+.mot-carnet .a{font-family:"Noto Naskh Arabic",serif;font-size:18px}
+.mot-carnet .f{color:var(--muted);font-size:14px}
+.vide{color:var(--muted);font-size:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;display:none;max-width:90%}
+</style>
+</head>
+<body>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil">
+  <h1>Kif-Kif</h1>
+  <p>Mode vocal avec Darij, ton tuteur de darija. Tu parles (ou tu écris en français), il te répond et te donne un mot à retenir.</p>
+  <button class="btn-principal" id="btnCommencer">Commencer avec Darij</button>
+  <button class="btn-secondaire" id="btnReglagesAccueil">Réglages (clé Groq)</button>
+</section>
+
+<!-- ============ MODE VOCAL ============ -->
+<section id="vocal">
+  <div class="barre-haut">
+    <div class="icones">
+      <button class="ico" id="btnReglages" title="Réglages" aria-label="Réglages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+      <button class="ico" id="btnCarnet" title="Carnet de vocabulaire" aria-label="Carnet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M6.5 17A2.5 2.5 0 0 0 4 19.5 2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
+      </button>
+    </div>
+    <div class="pastille" id="pastille" data-etat="repos"><i></i><span id="pastilleTexte">Prêt</span></div>
+    <div class="options">
+      <div class="interrupteur" title="Envoi automatique après avoir parlé">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12h4l2-6 4 12 3-9 2 3h5"/></svg>
+        <span>Auto</span>
+        <button class="switch" id="switchAuto" aria-label="Envoi automatique"></button>
+      </div>
+      <div class="interrupteur" title="Écrire la phonétique avec des chiffres (3, 7, 9) : ta3ban, 7lib…">
+        <span>3 · 7 · 9</span>
+        <button class="switch" id="switchChiffres" aria-label="Chiffres dans la phonétique"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="carte">
+    <div class="etiquette">MOT À RETENIR</div>
+    <div class="mot" id="motPhon">salam</div>
+    <div class="arabe" id="motArabe">سلام</div>
+    <div class="trad" id="motFr">Bonjour</div>
+    <div class="actions">
+      <button class="rond" id="btnRejouer" title="Réécouter le mot" aria-label="Réécouter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+      </button>
+      <button class="rond" id="btnSauver" title="Ajouter au carnet" aria-label="Ajouter au carnet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="sous-titres">
+    <div class="st-darij" id="stDarij" title="Toucher pour réécouter"></div>
+    <div class="st-fr" id="stFr"></div>
+    <div class="st-correction" id="stCorrection"></div>
+  </div>
+
+  <div class="centre">
+    <div class="capsules repos" id="capsules" title="Toucher pour parler">
+      <div class="capsule c1"></div><div class="capsule c2"></div><div class="capsule c3"></div><div class="capsule c4"></div>
+    </div>
+    <button class="micro" id="btnMicro" aria-label="Parler">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+    </button>
+    <div class="aide" id="aide">Touche le micro pour parler</div>
+  </div>
+
+  <div class="vous" id="vous"></div>
+  <div class="saisie">
+    <textarea id="texte" rows="1" placeholder="Écris en français ou en darija…"></textarea>
+    <button class="envoyer" id="btnEnvoyer" aria-label="Envoyer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+  <button class="fermer" id="btnFermer">✕ Fermer</button>
+</section>
+
+<!-- ============ PANNEAUX ============ -->
+<div class="voile" id="voile"></div>
+
+<aside class="panneau" id="panReglages">
+  <h2>Réglages <button class="ico" data-fermer>✕</button></h2>
+  <div class="champ">
+    <label for="cleGroq">Clé API Groq</label>
+    <input id="cleGroq" type="password" placeholder="gsk_…" autocomplete="off">
+    <small>Reste uniquement dans ce navigateur. Si la page est servie depuis ton dossier kifkif-local, elle essaie aussi de la lire dans reglages.txt.</small>
+  </div>
+  <div class="champ">
+    <label for="modeleLLM">Modèle du tuteur</label>
+    <input id="modeleLLM" placeholder="llama-3.3-70b-versatile">
+    <small>Si Groq renvoie « model not found », essaie openai/gpt-oss-120b ou un modèle listé sur console.groq.com.</small>
+  </div>
+  <div class="champ">
+    <label for="modeleSTT">Modèle de reconnaissance vocale</label>
+    <input id="modeleSTT" placeholder="whisper-large-v3">
+  </div>
+  <div class="champ">
+    <label for="cleFish">Clé API Fish Audio (facultatif, pour l'iPhone)</label>
+    <input id="cleFish" type="password" placeholder="colle ta clé Fish ici" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <small>Donne les voix marocaines Fish 1 et Fish 2 sans le PC. Reste uniquement dans ce téléphone. Sur le PC, inutile : la clé est lue dans reglages-fish.txt.</small>
+  </div>
+  <div class="champ">
+    <label for="voix">Voix</label>
+    <select id="voix"></select>
+    <small id="voixInfo"></small>
+  </div>
+  <div class="champ">
+    <label for="vitesse">Vitesse de la voix : <span id="vitesseVal">0.9</span></label>
+    <input id="vitesse" type="range" min="0.5" max="1.3" step="0.05" value="0.9">
+  </div>
+  <div class="champ ligne">
+    <label for="afficherArabe" style="margin:0">Afficher l'écriture arabe</label>
+    <input id="afficherArabe" type="checkbox" style="width:auto">
+  </div>
+  <div class="champ">
+    <label for="silence">Arrêt auto après un silence de : <span id="silenceVal">1.3</span> s</label>
+    <input id="silence" type="range" min="0.6" max="3" step="0.1" value="1.3">
+  </div>
+  <button class="btn-principal" id="btnSauverReglages" style="width:100%">Enregistrer</button>
+</aside>
+
+<aside class="panneau" id="panCarnet">
+  <h2>Carnet <button class="ico" data-fermer>✕</button></h2>
+  <div id="listeCarnet"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   Kif-Kif · Mode vocal
+   Boucle : Darij parle → tu parles → Groq Whisper → Groq LLM (JSON) → voix
+   Voix provisoire : synthèse vocale du navigateur (speechSynthesis)
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const LS = {
+  get:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+
+/* ---------- Réglages ---------- */
+const reglages = Object.assign({
+  cle:'', modeleLLM:'llama-3.3-70b-versatile', modeleSTT:'whisper-large-v3',
+  cleFish:'', voix:'', vitesse:0.9, afficherArabe:false, silence:1.3, auto:false, chiffres:true
+}, LS.get('kifkif_vocal_reglages', {}));
+function sauverReglages(){ LS.set('kifkif_vocal_reglages', reglages); }
+
+async function chargerCleDepuisFichier(){
+  if (!reglages.cle){
+    try{ const k=(localStorage.getItem('kifkif-groq-key')||'').trim(); if(/^gsk_/.test(k)){ reglages.cle=k; sauverReglages(); } }catch{}
+  }
+  if (reglages.cle || location.protocol==='file:') return;
+  try{
+    const r = await fetch('reglages.txt', {cache:'no-store'});
+    if(!r.ok) return;
+    const m = (await r.text()).match(/gsk_[A-Za-z0-9]+/);
+    if(m){ reglages.cle = m[0]; sauverReglages(); }
+  }catch{}
+}
+
+/* ---------- État de l'interface ---------- */
+const TEXTES = {repos:'Prêt', ecoute:"Je t'écoute…", reflexion:'Darij réfléchit…', parle:'Darij parle'};
+let etat = 'repos';
+function setEtat(e){
+  etat = e;
+  $('#pastille').dataset.etat = e;
+  $('#pastilleTexte').textContent = TEXTES[e];
+  const caps = $('#capsules');
+  caps.classList.toggle('repos', e==='repos');
+  caps.classList.toggle('reflexion', e==='reflexion');
+  if (e!=='ecoute' && e!=='parle') resetCapsules();
+  $('#btnMicro').classList.toggle('ecoute', e==='ecoute');
+  $('#btnMicro').disabled = (e==='reflexion');
+  $('#aide').textContent = e==='ecoute' ? 'Parle… touche encore pour arrêter'
+    : e==='reflexion' ? '' : e==='parle' ? 'Touche le micro pour l’interrompre' : 'Touche le micro pour parler';
+  if (e==='parle') animerParole(); else arreterAnimParole();
+}
+function toast(msg, ms=3500){
+  const t=$('#toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display='none', ms);
+}
+
+/* ---------- Capsules (visualiseur) ---------- */
+const capsEls = [...document.querySelectorAll('.capsule')];
+function niveauxCapsules(niv){ // niv: 0..1
+  const poids=[.75,1,.9,.65];
+  capsEls.forEach((c,i)=>{
+    const j = niv*poids[i]*(0.75+Math.random()*0.5);
+    c.style.height = Math.round(48 + Math.min(1,j)*82)+'px';
+  });
+}
+function resetCapsules(){ capsEls.forEach(c=>c.style.height=''); }
+let animParoleId=null;
+function animerParole(){
+  arreterAnimParole();
+  const tick=()=>{ niveauxCapsules(0.35+Math.random()*0.6); animParoleId=setTimeout(tick,110); };
+  tick();
+}
+function arreterAnimParole(){ clearTimeout(animParoleId); animParoleId=null; }
+
+/* ---------- Voix ----------
+   Jamal / Mouna : voix marocaines fabriquées par le serveur local (POST /api/tts, gratuit).
+   Secours : voix du navigateur. Tout le code de la voix est dans cette section :
+   pour changer de voix plus tard, il suffit de remplacer jouerServeur(). */
+let voixDispo=[], serveurVoix=false, serveurHorsService=0, fishDispo=false, fishHorsService=0;
+let jetonVoix=0, audioCourant=null, resoudreVoix=null, rafVoix=null;
+
+function chargerVoix(){
+  voixDispo = ('speechSynthesis' in window) ? speechSynthesis.getVoices() : [];
+  const sel=$('#voix'); sel.innerHTML='';
+  const ajouter=(val,txt)=>{ const o=document.createElement('option'); o.value=val; o.textContent=txt; sel.appendChild(o); };
+  if(serveurVoix){
+    ajouter('srv:jamal','Jamal (homme, marocain)'); ajouter('srv:mouna','Mouna (femme, marocaine)');
+    if(fishDispo){ ajouter('srv:fish1','Fish 1 · « مغربي » (marocain)'); ajouter('srv:fish2','Fish 2 · « صوت مغربي » (marocain)'); }
+  }
+  else if(fishDirect()){ ajouter('fish:fish1','Fish 1 · « مغربي » (marocain)'); ajouter('fish:fish2','Fish 2 · « صوت مغربي » (marocain)'); }
+  [...voixDispo].sort((a,b)=>score(b)-score(a)).forEach(v=>ajouter(v.name,`Navigateur : ${v.name} (${v.lang})`));
+  const existe = [...sel.options].some(o=>o.value===reglages.voix);
+  const marocaine = v=>v.startsWith('srv:')||v.startsWith('fish:');
+  if(!reglages.voix || !existe || ((serveurVoix||fishDirect()) && !marocaine(reglages.voix) && !reglages._voixChoisie)){
+    reglages.voix = sel.options[0] ? sel.options[0].value : '';
+  }
+  sel.value = reglages.voix;
+  $('#voixInfo').textContent = serveurVoix
+    ? (fishDispo ? 'Jamal, Mouna et Fish 1/2 : voix marocaines (serveur local de Kif-Kif). Si Fish ne répond pas, Jamal prend le relais. Les autres : voix du navigateur, en secours.'
+                 : 'Jamal et Mouna : voix marocaines (serveur local de Kif-Kif). Les autres : voix du navigateur, en secours.')
+    : fishDirect()
+      ? 'Fish 1 et Fish 2 : voix marocaines (Fish Audio, avec ta clé). Si Fish ne répond pas, voix du téléphone à la place.'
+      : 'Sur iPhone : colle ta clé Fish ci-dessus pour avoir une voix marocaine. Sur PC : ouvre http://localhost:8000/vocal.html (lance start.bat) pour Jamal.';
+}
+function score(v){ const l=v.lang.toLowerCase(); return l==='ar-ma'?3: l.startsWith('ar')?2: l.startsWith('fr')?1:0; }
+function fishDirect(){ return !serveurVoix && !!reglages.cleFish && /^https?:$/.test(location.protocol); }
+function voixChoisie(){
+  const nom = reglages.voix||'';
+  if(nom && !nom.startsWith('srv:') && !nom.startsWith('fish:')){ const v=voixDispo.find(x=>x.name===nom); if(v) return v; }
+  return [...voixDispo].sort((a,b)=>score(b)-score(a))[0] || null;
+}
+
+async function detecterServeur(){
+  if(!/^https?:$/.test(location.protocol)) return;
+  try{
+    const r = await fetch('/api/config',{cache:'no-store'});
+    if(!r.ok) return;
+    const c = await r.json();
+    if(c && c.voice_backend){ serveurVoix=true; fishDispo=!!c.fish; chargerVoix(); }
+  }catch{}
+}
+
+function arreterVoix(){
+  jetonVoix++;
+  try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch{}
+  if(audioCourant){ try{ audioCourant.pause(); }catch{} audioCourant=null; }
+  cancelAnimationFrame(rafVoix); arreterAnimParole();
+  if(resoudreVoix){ const r=resoudreVoix; resoudreVoix=null; r(); }
+}
+
+function boucleVolume(analyse, jeton){
+  arreterAnimParole(); // on remplace le mouvement aléatoire par le vrai volume
+  const buf = new Float32Array(analyse.fftSize);
+  const tick=()=>{
+    if(jeton!==jetonVoix || etat!=='parle') return;
+    analyse.getFloatTimeDomainData(buf);
+    let s=0; for(const x of buf) s+=x*x;
+    niveauxCapsules(Math.min(1, Math.sqrt(s/buf.length)*7));
+    rafVoix=requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+// ---- Lecteur audio unique ----
+// Sur iPhone, un son ne peut démarrer que si le lecteur a été « débloqué » par un toucher.
+// On garde donc un seul lecteur, débloqué à chaque toucher (Commencer, micro, rejouer).
+const SILENCE = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAABgAAAVIAnZ2dnZ2dnZ2dnZ2dnZ2dnbGxsbGxsbGxsbGxsbGxsbGxxMTExMTExMTExMTExMTExNjY2NjY2NjY2NjY2NjY2NjY7Ozs7Ozs7Ozs7Ozs7Ozs7Oz/////////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQCowAAAAAAAAFSti/NJwAAAAAAAAAAAAAAAAD/8xDEAAAAA0gAAAAATEFNRTMuMTAwVVVVVf/zEMQNAAADSAAAAABVVVVVVVVVVVVVVVVV//MQxBoAAANIAAAAAFVVVVVVVVVVVVVVVVX/8xDEJwAAA0gAAAAAVVVVVVVVVVVVVVVVVf/zEMQ0AAADSAAAAABVVVVVVVVVVVVVVVVV//MQxEEAAANIAAAAAFVVVVVVVVVVVVVVVVU=';
+let lecteur=null, analyseLecteur=null;
+function debloquerAudio(){
+  try{
+    ctxAudio = ctxAudio || new (window.AudioContext||window.webkitAudioContext)();
+    if(ctxAudio.state==='suspended') ctxAudio.resume();
+  }catch{}
+  if(!lecteur){
+    lecteur = new Audio(); lecteur.preload='auto'; lecteur.setAttribute('playsinline','');
+    // Sur iPhone, on ne fait pas passer le son par Web Audio (risque de silence) : les capsules bougent alors au hasard.
+    const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+    if(!iOS) try{
+      const src = ctxAudio.createMediaElementSource(lecteur);
+      analyseLecteur = ctxAudio.createAnalyser(); analyseLecteur.fftSize=1024;
+      src.connect(analyseLecteur); analyseLecteur.connect(ctxAudio.destination);
+    }catch{ analyseLecteur=null; }
+  }
+  if(lecteur.paused && etat!=='parle'){ try{ lecteur.src=SILENCE; const p=lecteur.play(); if(p) p.catch(()=>{}); }catch{} }
+}
+async function jouerBlob(blob, jeton, vitesseLecture){
+  if(jeton!==jetonVoix) return;
+  if(!lecteur) debloquerAudio();
+  try{ if(ctxAudio && ctxAudio.state==='suspended') await ctxAudio.resume(); }catch{}
+  const url = URL.createObjectURL(blob);
+  const a = lecteur; audioCourant=a;
+  a.src = url;
+  if('preservesPitch' in a) a.preservesPitch=true; if('webkitPreservesPitch' in a) a.webkitPreservesPitch=true;
+  const v = vitesseLecture||1; a.defaultPlaybackRate=v; a.playbackRate=v;
+  try{
+    await new Promise((fin,err)=>{
+      a.onended=fin;
+      a.onerror=()=>err(new Error('lecture audio impossible'));
+      a.onpause=()=>{ if(jeton!==jetonVoix) fin(); };
+      a.play().then(()=>{ if(jeton!==jetonVoix) return; setEtat('parle'); if(analyseLecteur) boucleVolume(analyseLecteur, jeton); }).catch(err);
+    });
+  } finally { a.onended=a.onerror=a.onpause=null; URL.revokeObjectURL(url); }
+}
+
+// ---- Voix Fish appelée directement (iPhone, sans le PC) ----
+const FISH_VOIX = {fish1:'8ad316c0e3aa4810a471e1bca511cd32', fish2:'48b04c7c132e46d083b810ea09f90131'};
+async function cleCacheFish(ref, texte){
+  try{
+    const h = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(ref+'|'+texte));
+    return 'https://kifkif.local/fish/'+[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')+'.mp3';
+  }catch{ return null; }
+}
+async function audioFish(texte, voix){
+  const ref = FISH_VOIX[voix]; if(!ref) throw new Error('voix Fish inconnue');
+  const cle = await cleCacheFish(ref, texte);
+  let cache=null;
+  try{ if(cle && 'caches' in window){ cache = await caches.open('kifkif-fish'); const r = await cache.match(cle); if(r) return await r.blob(); } }catch{}
+  const corps = JSON.stringify({text:texte, format:'mp3', reference_id:ref});
+  const appel = avecModele => fetch('https://api.fish.audio/v1/tts',{method:'POST',
+    headers: Object.assign({'Authorization':'Bearer '+reglages.cleFish,'Content-Type':'application/json'}, avecModele?{'model':'s2.1-pro-free'}:{}),
+    body:corps});
+  let r;
+  try{ r = await appel(true); }
+  catch(e){
+    // Le navigateur a bloqué l'appel (sécurité du site Fish). Dernier essai sans l'en-tête « model ».
+    try{ r = await appel(false); }
+    catch{ throw new Error('Fish refuse les appels directs depuis une page web (sécurité de leur site)'); }
+  }
+  if(!r.ok){
+    const m = {401:'clé Fish refusée : vérifie-la dans les réglages', 402:'Fish n\'est plus gratuit pour cette voix', 403:'Fish n\'est plus gratuit pour cette voix', 429:'trop de demandes à Fish'}[r.status] || ('erreur Fish '+r.status);
+    throw new Error(m);
+  }
+  const blob = await r.blob();
+  if(blob.size<1000) throw new Error('Fish a renvoyé un audio vide');
+  try{ if(cache && cle) await cache.put(cle, new Response(blob,{headers:{'Content-Type':'audio/mpeg'}})); }catch{}
+  return blob;
+}
+
+// ---- Voix du serveur local (Jamal / Mouna / Fish via le PC) ----
+async function jouerServeur(texte, voix, jeton){
+  const estFish = voix.startsWith('fish');
+  // Edge (Jamal/Mouna) règle la vitesse côté serveur ; Fish est ralenti/accéléré à la lecture.
+  const rate = estFish ? 0 : Math.max(-50, Math.min(20, Math.round((reglages.vitesse-1)*100)));
+  const r = await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:texte,voice:voix,rate})});
+  if(!r.ok){ let m='erreur '+r.status; try{ m=(await r.json()).error||m; }catch{} throw new Error(m); }
+  const blob = await r.blob();
+  await jouerBlob(blob, jeton, estFish ? Math.max(0.5, Math.min(1.5, reglages.vitesse||1)) : 1);
+}
+
+// ---- Voix du navigateur (secours) ----
+function parlerNavigateur(texteArabe, textePhon, jeton){
+  return new Promise(resolve=>{
+    if(!('speechSynthesis' in window)) return resolve();
+    const v = voixChoisie();
+    const estArabe = v && v.lang.toLowerCase().startsWith('ar');
+    const texte = estArabe ? (texteArabe||textePhon) : (textePhon||texteArabe);
+    if(!texte) return resolve();
+    const u = new SpeechSynthesisUtterance(texte);
+    if(v){ u.voice=v; u.lang=v.lang; } else u.lang='ar-MA';
+    u.rate = reglages.vitesse;
+    u.onstart = ()=>{ if(jeton===jetonVoix) setEtat('parle'); };
+    u.onend = u.onerror = ()=>resolve();
+    speechSynthesis.speak(u);
+    setTimeout(()=>{ if(!speechSynthesis.speaking) resolve(); }, 15000);
+  });
+}
+
+// ---- Point d'entrée unique ----
+async function parler(texteArabe, textePhon){
+  arreterVoix();
+  const jeton = jetonVoix;
+  await new Promise(async resolve=>{
+    resoudreVoix = resolve;
+    try{
+      const choix = reglages.voix||'';
+      if(serveurVoix && choix.startsWith('srv:') && Date.now()>=serveurHorsService){
+        const texte = (texteArabe||textePhon||'').trim();
+        if(!texte) return resolve();
+        let voixSrv = choix.slice(4);
+        // Fish en panne (ou plus gratuit) : on passe tout de suite sur Jamal, sans attendre à chaque phrase.
+        if(voixSrv.startsWith('fish') && Date.now()<fishHorsService) voixSrv='jamal';
+        try{ await jouerServeur(texte, voixSrv, jeton); return resolve(); }
+        catch(e){
+          if(jeton!==jetonVoix) return resolve(); // interrompu par l'utilisateur
+          if(voixSrv.startsWith('fish')){
+            fishHorsService = Date.now()+5*60*1000;
+            toast('Voix Fish indisponible ('+(e.message||e)+'). Jamal la remplace pendant 5 min.', 7000);
+            try{ await jouerServeur(texte, 'jamal', jeton); return resolve(); }
+            catch(e2){ if(jeton!==jetonVoix) return resolve(); }
+          }
+          serveurHorsService = Date.now()+5*60*1000;
+          toast('Voix marocaine indisponible. Voix du navigateur à la place pendant 5 min.', 7000);
+        }
+      }
+      if(choix.startsWith('fish:') && fishDirect() && Date.now()>=fishHorsService){
+        const texte = (texteArabe||textePhon||'').trim();
+        if(!texte) return resolve();
+        try{
+          const blob = await audioFish(texte, choix.slice(5));
+          await jouerBlob(blob, jeton, Math.max(0.5, Math.min(1.5, reglages.vitesse||1)));
+          return resolve();
+        }catch(e){
+          if(jeton!==jetonVoix) return resolve();
+          fishHorsService = Date.now()+5*60*1000;
+          toast('Voix Fish indisponible ('+(e.message||e)+'). Voix du téléphone à la place pendant 5 min.', 8000);
+        }
+      }
+      if(jeton!==jetonVoix) return resolve();
+      await parlerNavigateur(texteArabe, textePhon, jeton);
+    }catch{}
+    resolve();
+  });
+  if(jeton===jetonVoix && etat==='parle') setEtat('repos');
+}
+
+/* ---------- Tuteur (Groq LLM, réponse JSON) ---------- */
+const systeme = () => { const ch = reglages.chiffres; const T = ch ? 'ta3ban' : "ta'ban"; return `Tu es Darij, un partenaire de conversation et tuteur de darija marocaine (darija standard de Casablanca/Rabat, pas celle de Fès). L'élève est francophone, niveau presque zéro.
+
+RÈGLE N°1 : TU RÉPONDS À L'ÉLÈVE, TU NE LE RÉPÈTES JAMAIS.
+Tu es la personne en face de lui, comme un ami. Quand il dit quelque chose (même en français), tu réagis à ce qu'il vient de dire : tu réponds à sa question ou tu réagis à son information, en darija simple. Ensuite, seulement si c'est naturel, tu poses UNE petite question liée à ce qu'il a dit.
+- Ne redis JAMAIS sa phrase, même traduite en darija. Sa phrase traduite va uniquement dans "traduction_eleve".
+- S'il te pose une question ("et toi ?", "tu vas bien ?"), tu y réponds d'abord. Tu peux inventer une réponse simple (tu vas bien, tu as bu un thé à la menthe…).
+- S'il demande explicitement comment dire quelque chose ("comment on dit…"), tu donnes la phrase en darija et tu le fais répéter.
+- Pas de question à chaque message. Si tu poses une question, elle doit avoir du sens après ta réponse et rester très simple.
+
+Style : chaleureux, un peu drôle, 1 à 2 phrases courtes en darija maximum, une seule idée à la fois, vocabulaire courant du quotidien.
+${ch ? 'Phonétique : lettres latines lisibles par un francophone, avec les chiffres usuels du darija écrit : 3 (ع), 7 (ح), 9 (ق), plus kh (خ), gh (غ), ch (ش), ou (و). Ex : ta3ban, 7lib, 9ahwa.' : "Phonétique : lettres latines lisibles par un francophone, SANS AUCUN chiffre (jamais de 3, 7 ou 9). Utilise : kh (خ), gh (غ), h (ح et ه), q (ق), ch (ش), ou (و), et une apostrophe pour ع (ex : ta'ban)."}
+Si l'élève fait une erreur en darija, corrige-la gentiment dans "correction".
+
+Exemples (à imiter pour le fond, pas à recopier) :
+Élève : "Je suis fatigué et toi ?" →
+{"phonetique":"Ana mzyan, hamdoulillah. Wach bghiti atay ?","arabe":"أنا مزيان، الحمد لله. واش بغيتي أتاي؟","francais":"Moi ça va, grâce à Dieu. Tu veux un thé ?","traduction_eleve":"Ana ${T}, w nta ?","correction":"","mot":{"phonetique":"${T}","arabe":"تَعْبَان","francais":"fatigué"}}
+Élève : "Comment on dit merci ?" →
+{"phonetique":"Choukran ! Goul-ha ma'aya : choukran bzaf.","arabe":"شكرا! قولها معايا: شكرا بزاف.","francais":"Merci ! Dis-le avec moi : merci beaucoup.","traduction_eleve":"Choukran.","correction":"","mot":{"phonetique":"choukran","arabe":"شُكْرًا","francais":"merci"}}
+
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, de cette forme :
+{
+ "phonetique": "TA réponse à l'élève en darija, en lettres latines (jamais une répétition de sa phrase)",
+ "arabe": "exactement la même réponse en écriture arabe (sert à la voix)",
+ "francais": "traduction française de ta réponse",
+ "traduction_eleve": "si l'élève a dit une phrase en français : comment la dire en darija (phonétique), sinon chaîne vide",
+ "correction": "si l'élève a fait une erreur en darija : correction courte expliquée en français, sinon chaîne vide",
+ "mot": {"phonetique":"un mot clé de ta réponse à retenir","arabe":"le même mot en écriture arabe avec voyelles","francais":"sa traduction"}
+}`; };
+let historique = LS.get('kifkif_vocal_historique_v2', []);
+
+const PREF_LLM=['llama-3.3-70b-versatile','openai/gpt-oss-120b','openai/gpt-oss-20b','llama-3.1-8b-instant','meta-llama/llama-4-scout-17b-16e-instruct','qwen/qwen3-32b'];
+const PREF_STT=['whisper-large-v3','whisper-large-v3-turbo'];
+async function modelesGroq(){
+  const r = await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+reglages.cle}});
+  if(!r.ok) throw new Error('Liste des modèles Groq ('+r.status+') : vérifie ta clé.');
+  return (await r.json()).data.map(m=>m.id);
+}
+async function trouverModeleLLM(){
+  const ids = await modelesGroq();
+  const ok = PREF_LLM.find(m=>ids.includes(m));
+  if(ok) return ok;
+  const autre = ids.find(i=>!/whisper|tts|guard|playai|orpheus|prompt-guard|safeguard/i.test(i));
+  if(!autre) throw new Error('Aucun modèle de chat disponible avec cette clé.');
+  return autre;
+}
+async function trouverModeleSTT(){
+  const ids = await modelesGroq();
+  return PREF_STT.find(m=>ids.includes(m)) || ids.find(i=>/whisper/i.test(i)) || null;
+}
+
+const norm = t => String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z؀-ۿ]+/g,' ').trim();
+function repeteLEleve(rep){
+  const p = norm(rep.phonetique), t = norm(rep.traduction_eleve);
+  if(!p || !t) return false;
+  return p===t || (p.includes(t) && p.length < t.length*1.6) || (t.includes(p) && t.length < p.length*1.6);
+}
+
+async function appelerGroq(msgs, temperature){
+  const post = (avecJson)=>{
+    const corps = {model:reglages.modeleLLM, messages:msgs, temperature};
+    if(avecJson) corps.response_format = {type:'json_object'};
+    return fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+reglages.cle},
+      body:JSON.stringify(corps)
+    });
+  };
+  let r = await post(true);
+  if(r.status===404){ // modèle introuvable → on en choisit un disponible avec cette clé
+    const nouveau = await trouverModeleLLM();
+    if(nouveau !== reglages.modeleLLM){
+      reglages.modeleLLM = nouveau; sauverReglages();
+      toast('Modèle ajusté automatiquement : '+nouveau, 4000);
+      r = await post(true);
+    }
+  }
+  if(r.status===400){ // format JSON refusé par ce modèle → on réessaie sans
+    const t = await r.clone().text();
+    if(/response_format|json/i.test(t)) r = await post(false);
+  }
+  if(!r.ok){ const t=await r.text(); throw new Error('Groq ('+r.status+') : '+t.slice(0,160)); }
+  const data = await r.json();
+  const brut = data.choices?.[0]?.message?.content || '{}';
+  try{ return JSON.parse(brut); }catch{ const m=brut.match(/\{[\s\S]*\}/); try{ return m?JSON.parse(m[0]):{phonetique:brut}; }catch{ return {phonetique:brut}; } }
+}
+
+async function appelerTuteur(messageEleve){
+  if(!reglages.cle){ ouvrirPanneau('#panReglages'); throw new Error('Ajoute ta clé Groq dans les réglages.'); }
+  const base = [{role:'system',content:systeme()}, ...historique.slice(-12)];
+  let rep = await appelerGroq([...base, {role:'user',content:messageEleve}], 0.6);
+  if(repeteLEleve(rep)){
+    // Darij a juste répété la phrase de l'élève : on lui redemande une vraie réponse
+    rep = await appelerGroq([...base,
+      {role:'user',content:messageEleve},
+      {role:'assistant',content:JSON.stringify(rep)},
+      {role:'user',content:"Tu as juste répété ma phrase. Réponds-moi vraiment : réagis à ce que je viens de dire, comme un ami (et réponds à ma question s'il y en a une). Ne répète pas ma phrase. Même format JSON."}
+    ], 0.8);
+  }
+  // on garde en mémoire seulement l'essentiel de l'échange
+  historique.push({role:'user',content:messageEleve},{role:'assistant',content:JSON.stringify({phonetique:rep.phonetique||'',francais:rep.francais||''})});
+  historique = historique.slice(-24); LS.set('kifkif_vocal_historique_v2', historique);
+  return rep;
+}
+
+/* ---------- Affichage d'une réponse ---------- */
+let derniereReponse=null, motCourant={phonetique:'salam',arabe:'سلام',francais:'Bonjour'};
+function afficherMot(m){
+  if(!m || !m.phonetique) return;
+  motCourant=m;
+  $('#motPhon').textContent=m.phonetique;
+  $('#motArabe').textContent=m.arabe||'';
+  $('#motFr').textContent=m.francais||'';
+  majBoutonSauver();
+}
+function afficherReponse(rep){
+  derniereReponse=rep;
+  $('#stDarij').textContent = rep.phonetique || '';
+  $('#stFr').textContent = rep.francais || '';
+  const c=$('#stCorrection'); let html='';
+  if(rep.traduction_eleve) html+=`<div><b>En darija :</b> ${esc(rep.traduction_eleve)}</div>`;
+  if(rep.correction) html+=`<div><b>Correction :</b> ${esc(rep.correction)}</div>`;
+  c.innerHTML=html; c.style.display = html?'block':'none';
+  afficherMot(rep.mot);
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+
+/* ---------- Envoi d'un message ---------- */
+let occupe=false;
+async function envoyer(texte, cache=false){
+  texte=(texte||'').trim(); if(!texte || occupe) return;
+  occupe=true;
+  $('#vous').innerHTML = cache ? '' : '<b>Toi :</b> '+esc(texte);
+  $('#texte').value=''; ajusterTexte();
+  setEtat('reflexion');
+  try{
+    const rep = await appelerTuteur(texte);
+    afficherReponse(rep);
+    await parler(rep.arabe, rep.phonetique);
+  }catch(e){ toast(e.message||String(e)); setEtat('repos'); }
+  finally{ occupe=false; if(etat==='reflexion') setEtat('repos'); }
+}
+
+/* ---------- Micro : enregistrement + détection de silence + Groq Whisper ---------- */
+let flux=null, ctxAudio=null, analyseur=null, enregistreur=null, morceaux=[], boucleId=null;
+async function demarrerEcoute(){
+  if(occupe) return;
+  arreterVoix();
+  if(!reglages.cle){ ouvrirPanneau('#panReglages'); toast('Ajoute ta clé Groq pour utiliser le micro.'); return; }
+  try{
+    flux = flux || await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  }catch(e){ toast("Micro refusé ou indisponible (sur iPhone il faut du HTTPS)."); return; }
+  ctxAudio = ctxAudio || new (window.AudioContext||window.webkitAudioContext)();
+  if(ctxAudio.state==='suspended') await ctxAudio.resume();
+  const src = ctxAudio.createMediaStreamSource(flux);
+  analyseur = ctxAudio.createAnalyser(); analyseur.fftSize=1024; src.connect(analyseur);
+
+  const types=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'];
+  const mime = types.find(t=>window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+  enregistreur = new MediaRecorder(flux, mime?{mimeType:mime}:undefined);
+  morceaux=[];
+  enregistreur.ondataavailable = e=>{ if(e.data.size) morceaux.push(e.data); };
+  enregistreur.onstop = ()=> traiterEnregistrement(enregistreur.mimeType||mime||'audio/webm');
+  enregistreur.start(250);
+  setEtat('ecoute');
+
+  const buf = new Float32Array(analyseur.fftSize);
+  let aParle=false, debutSilence=null; const t0=performance.now();
+  const boucle=()=>{
+    if(etat!=='ecoute') return;
+    analyseur.getFloatTimeDomainData(buf);
+    let s=0; for(const x of buf) s+=x*x; const rms=Math.sqrt(s/buf.length);
+    niveauxCapsules(Math.min(1, rms*9));
+    const seuil=0.018, now=performance.now();
+    if(rms>seuil){ aParle=true; debutSilence=null; }
+    else if(aParle){ debutSilence = debutSilence||now; if(now-debutSilence > reglages.silence*1000) return arreterEcoute(); }
+    if(now-t0 > 20000) return arreterEcoute();            // 20 s max
+    if(!aParle && now-t0 > 8000) return arreterEcoute(true); // rien entendu
+    boucleId=requestAnimationFrame(boucle);
+  };
+  boucle();
+}
+function arreterEcoute(annuler=false){
+  cancelAnimationFrame(boucleId);
+  if(enregistreur && enregistreur.state!=='inactive'){ enregistreur._annule=annuler; enregistreur.stop(); }
+  if(annuler){ setEtat('repos'); toast("Je n'ai rien entendu."); }
+}
+async function traiterEnregistrement(mime){
+  if(enregistreur && enregistreur._annule) return;
+  const blob = new Blob(morceaux,{type:mime});
+  if(blob.size<1500){ setEtat('repos'); return; }
+  setEtat('reflexion');
+  try{
+    const ext = mime.includes('mp4')?'m4a': mime.includes('ogg')?'ogg':'webm';
+    const envoyerSTT = ()=>{
+      const fd = new FormData();
+      fd.append('file', blob, 'micro.'+ext);
+      fd.append('model', reglages.modeleSTT);
+      fd.append('prompt', 'Darija marocaine et français mélangés. Salam, labas, chno, bghit, wakha, safi, twalit.');
+      fd.append('response_format','json');
+      return fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+reglages.cle},body:fd});
+    };
+    let r = await envoyerSTT();
+    if(r.status===404){
+      const nouveau = await trouverModeleSTT();
+      if(nouveau && nouveau!==reglages.modeleSTT){ reglages.modeleSTT=nouveau; sauverReglages(); toast('Modèle vocal ajusté : '+nouveau,3000); r = await envoyerSTT(); }
+    }
+    if(!r.ok) throw new Error('Transcription ('+r.status+') : '+(await r.text()).slice(0,140));
+    const texte = ((await r.json()).text||'').trim();
+    if(!texte){ setEtat('repos'); toast("Je n'ai pas compris, réessaie."); return; }
+    if(reglages.auto){ setEtat('repos'); envoyer(texte); }
+    else{
+      setEtat('repos');
+      $('#texte').value=texte; ajusterTexte(); $('#texte').focus();
+      $('#aide').textContent='Relis, corrige si besoin, puis Entrée';
+    }
+  }catch(e){ toast(e.message||String(e)); setEtat('repos'); }
+}
+
+/* ---------- Carnet ---------- */
+let carnet = LS.get('kifkif_carnet_vocal', []);
+const dansCarnet = m => carnet.some(x=>x.phonetique===m.phonetique);
+function majBoutonSauver(){ $('#btnSauver').classList.toggle('actif', dansCarnet(motCourant)); }
+function basculerCarnet(){
+  if(dansCarnet(motCourant)) carnet = carnet.filter(x=>x.phonetique!==motCourant.phonetique);
+  else { carnet.unshift({...motCourant, date:new Date().toISOString()}); toast('Ajouté au carnet', 1500); }
+  LS.set('kifkif_carnet_vocal', carnet); majBoutonSauver(); rendreCarnet();
+}
+function rendreCarnet(){
+  const l=$('#listeCarnet');
+  if(!carnet.length){ l.innerHTML='<p class="vide">Aucun mot pour l’instant. Touche le marque-page sous un mot pour l’ajouter.</p>'; return; }
+  l.innerHTML = carnet.map((m,i)=>`<div class="mot-carnet"><div><div class="p">${esc(m.phonetique)}</div>${reglages.afficherArabe&&m.arabe?`<div class="a">${esc(m.arabe)}</div>`:''}<div class="f">${esc(m.francais||'')}</div></div>
+    <div style="display:flex;gap:6px"><button class="rond" data-ecouter="${i}" aria-label="Écouter">▶</button><button class="rond" data-suppr="${i}" aria-label="Supprimer">✕</button></div></div>`).join('');
+}
+$('#listeCarnet').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.ecouter!==undefined){ const m=carnet[+b.dataset.ecouter]; debloquerAudio(); parler(m.arabe,m.phonetique); }
+  if(b.dataset.suppr!==undefined){ carnet.splice(+b.dataset.suppr,1); LS.set('kifkif_carnet_vocal',carnet); rendreCarnet(); majBoutonSauver(); }
+});
+
+/* ---------- Panneaux ---------- */
+function ouvrirPanneau(sel){ $('#voile').style.display='block'; $(sel).classList.add('ouvert'); if(sel==='#panCarnet') rendreCarnet(); if(sel==='#panReglages') remplirReglages(); }
+function fermerPanneaux(){ $('#voile').style.display='none'; document.querySelectorAll('.panneau').forEach(p=>p.classList.remove('ouvert')); }
+function remplirReglages(){
+  $('#cleGroq').value=reglages.cle; $('#cleFish').value=reglages.cleFish||''; $('#modeleLLM').value=reglages.modeleLLM; $('#modeleSTT').value=reglages.modeleSTT;
+  $('#vitesse').value=reglages.vitesse; $('#vitesseVal').textContent=reglages.vitesse;
+  $('#silence').value=reglages.silence; $('#silenceVal').textContent=reglages.silence;
+  $('#afficherArabe').checked=reglages.afficherArabe; chargerVoix();
+}
+function appliquerAffichage(){
+  $('#motArabe').style.display = reglages.afficherArabe ? '' : 'none';
+  $('#switchAuto').classList.toggle('on', reglages.auto);
+  $('#switchChiffres').classList.toggle('on', reglages.chiffres);
+}
+
+/* ---------- Événements ---------- */
+$('#btnCommencer').onclick = async ()=>{
+  $('#accueil').style.display='none'; $('#vocal').classList.add('ouvert');
+  // débloque la voix sur iPhone (doit partir d'un geste)
+  try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); }catch{}
+  debloquerAudio();
+  if(!reglages.cle){ ouvrirPanneau('#panReglages'); toast('Ajoute ta clé Groq pour que Darij puisse répondre.'); return; }
+  if(!historique.length) envoyer("[Début de séance] Salue-moi et pose-moi une première question très simple.", true);
+};
+$('#btnReglagesAccueil').onclick = ()=>ouvrirPanneau('#panReglages');
+$('#btnFermer').onclick = ()=>{ arreterVoix(); if(etat==='ecoute') arreterEcoute(true); setEtat('repos'); $('#vocal').classList.remove('ouvert'); $('#accueil').style.display='flex'; };
+$('#btnReglages').onclick = ()=>ouvrirPanneau('#panReglages');
+$('#btnCarnet').onclick = ()=>ouvrirPanneau('#panCarnet');
+$('#voile').onclick = fermerPanneaux;
+document.querySelectorAll('[data-fermer]').forEach(b=>b.onclick=fermerPanneaux);
+$('#cleFish').oninput = e=>{ reglages.cleFish=e.target.value.trim(); chargerVoix(); };
+$('#vitesse').oninput = e=>$('#vitesseVal').textContent=e.target.value;
+$('#silence').oninput = e=>$('#silenceVal').textContent=e.target.value;
+$('#btnSauverReglages').onclick = ()=>{
+  reglages.cle=$('#cleGroq').value.trim(); reglages.cleFish=$('#cleFish').value.trim(); reglages.modeleLLM=$('#modeleLLM').value.trim()||'llama-3.3-70b-versatile';
+  reglages.modeleSTT=$('#modeleSTT').value.trim()||'whisper-large-v3'; reglages.voix=$('#voix').value; reglages._voixChoisie=true;
+  reglages.vitesse=+$('#vitesse').value; reglages.silence=+$('#silence').value; reglages.afficherArabe=$('#afficherArabe').checked;
+  sauverReglages(); appliquerAffichage(); fermerPanneaux(); toast('Réglages enregistrés',1500);
+};
+$('#switchAuto').onclick = ()=>{ reglages.auto=!reglages.auto; sauverReglages(); appliquerAffichage(); toast(reglages.auto?'Envoi automatique activé':'Envoi manuel : tu relis avant d’envoyer',2000); };
+$('#switchChiffres').onclick = ()=>{ reglages.chiffres=!reglages.chiffres; sauverReglages(); appliquerAffichage(); toast(reglages.chiffres?'Phonétique avec chiffres (ta3ban, 7lib…) dès la prochaine réponse':"Phonétique sans chiffres (ta'ban, hlib…) dès la prochaine réponse",2800); };
+const toucherMicro = ()=>{ debloquerAudio(); if(etat==='ecoute') arreterEcoute(); else if(etat==='parle'){ arreterVoix(); setEtat('repos'); demarrerEcoute(); } else demarrerEcoute(); };
+$('#btnMicro').onclick = toucherMicro;
+$('#capsules').onclick = toucherMicro;
+$('#btnRejouer').onclick = ()=>{ debloquerAudio(); parler(motCourant.arabe, motCourant.phonetique); };
+$('#btnSauver').onclick = basculerCarnet;
+$('#stDarij').onclick = ()=>{ debloquerAudio(); if(derniereReponse) parler(derniereReponse.arabe, derniereReponse.phonetique); };
+$('#btnEnvoyer').onclick = ()=>{ debloquerAudio(); envoyer($('#texte').value); };
+$('#texte').addEventListener('keydown',e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); envoyer($('#texte').value); } });
+function ajusterTexte(){ const t=$('#texte'); t.style.height='auto'; t.style.height=Math.min(120,t.scrollHeight)+'px'; }
+$('#texte').addEventListener('input',ajusterTexte);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') fermerPanneaux(); });
+
+/* ---------- Démarrage ---------- */
+if('speechSynthesis' in window){ chargerVoix(); speechSynthesis.onvoiceschanged = chargerVoix; }
+appliquerAffichage(); setEtat('repos');
+chargerCleDepuisFichier();
+detecterServeur();
+</script>
+</body>
+</html>
