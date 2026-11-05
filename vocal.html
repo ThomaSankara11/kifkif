@@ -257,6 +257,15 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <small id="voixInfo"></small>
   </div>
   <div class="champ">
+    <label for="voixTuteur">Voix du tuteur</label>
+    <select id="voixTuteur">
+      <option value="une">Une seule voix (recommandé : français + darija, voix marocaine)</option>
+      <option value="darija">Darija seulement (le français reste écrit)</option>
+      <option value="deux">Deux voix (voix française puis voix marocaine)</option>
+    </select>
+    <small>Quand l'élève demande « comment on dit… », le tuteur dit une courte explication en français avant le darija. Marche avec les voix Fish 1 ou Fish 2 ; sinon, seul le darija est dit.</small>
+  </div>
+  <div class="champ">
     <label for="vitesse">Vitesse de la voix : <span id="vitesseVal">0.9</span></label>
     <input id="vitesse" type="range" min="0.5" max="1.3" step="0.05" value="0.9">
   </div>
@@ -293,7 +302,7 @@ const LS = {
 /* ---------- Réglages ---------- */
 const reglages = Object.assign({
   cle:'', modeleLLM:'llama-3.3-70b-versatile', modeleSTT:'whisper-large-v3',
-  codeRelais:'', voix:'', vitesse:0.9, afficherArabe:false, silence:1.3, auto:false, chiffres:true, ecritureDictee:'arabe', langueMicro:'ar'
+  codeRelais:'', voix:'', vitesse:0.9, afficherArabe:false, silence:1.3, auto:false, chiffres:true, ecritureDictee:'arabe', langueMicro:'ar', voixTuteur:'une'
 }, LS.get('kifkif_vocal_reglages', {}));
 function sauverReglages(){ LS.set('kifkif_vocal_reglages', reglages); }
 
@@ -357,6 +366,8 @@ function arreterAnimParole(){ clearTimeout(animParoleId); animParoleId=null; }
    pour changer de voix plus tard, il suffit de remplacer jouerServeur(). */
 let voixDispo=[], serveurVoix=false, serveurHorsService=0, fishDispo=false, fishHorsService=0;
 let jetonVoix=0, audioCourant=null, resoudreVoix=null, rafVoix=null;
+function modeVoixTuteur(){ const m=reglages.voixTuteur||'une'; return (m==='deux' && !serveurVoix) ? 'une' : m; } // « deux voix » : PC seulement
+let detectionFaite=false; // le serveur local a-t-il déjà répondu ? (sinon on garde la voix enregistrée)
 
 function chargerVoix(){
   voixDispo = ('speechSynthesis' in window) ? speechSynthesis.getVoices() : [];
@@ -370,10 +381,14 @@ function chargerVoix(){
   [...voixDispo].sort((a,b)=>score(b)-score(a)).forEach(v=>ajouter(v.name,`Navigateur : ${v.name} (${v.lang})`));
   const existe = [...sel.options].some(o=>o.value===reglages.voix);
   const marocaine = v=>v.startsWith('srv:')||v.startsWith('fish:');
-  if(!reglages.voix || !existe || ((serveurVoix||fishDirect()) && !marocaine(reglages.voix) && !reglages._voixChoisie)){
+  // Tant que le serveur n'a pas répondu, les voix Jamal/Fish ne sont pas encore dans la liste : on garde le choix enregistré.
+  const enAttente = !detectionFaite && /^(srv:|fish:)/.test(reglages.voix||'') && /^https?:$/.test(location.protocol);
+  if(enAttente){ /* on ne touche à rien */ }
+  else if(!reglages.voix || !existe || ((serveurVoix||fishDirect()) && !marocaine(reglages.voix) && !reglages._voixChoisie)){
     reglages.voix = sel.options[0] ? sel.options[0].value : '';
   }
-  sel.value = reglages.voix;
+  if(!enAttente) sel.value = reglages.voix;
+  { const o=$('#voixTuteur') && $('#voixTuteur').querySelector('option[value=deux]'); if(o){ o.disabled=!serveurVoix; o.textContent = serveurVoix ? 'Deux voix (voix française puis voix marocaine)' : 'Deux voix (seulement sur le PC)'; } }
   $('#voixInfo').textContent = serveurVoix
     ? (fishDispo ? 'Jamal, Mouna et Fish 1/2 : voix marocaines (serveur local de Kif-Kif). Si Fish ne répond pas, Jamal prend le relais. Les autres : voix du navigateur, en secours.'
                  : 'Jamal et Mouna : voix marocaines (serveur local de Kif-Kif). Les autres : voix du navigateur, en secours.')
@@ -390,13 +405,15 @@ function voixChoisie(){
 }
 
 async function detecterServeur(){
-  if(!/^https?:$/.test(location.protocol)) return;
+  if(!/^https?:$/.test(location.protocol)){ detectionFaite=true; return; }
   try{
     const r = await fetch('/api/config',{cache:'no-store'});
-    if(!r.ok) return;
-    const c = await r.json();
-    if(c && c.voice_backend){ serveurVoix=true; fishDispo=!!c.fish; chargerVoix(); }
+    if(r.ok){
+      const c = await r.json();
+      if(c && c.voice_backend){ serveurVoix=true; fishDispo=!!c.fish; }
+    }
   }catch{}
+  detectionFaite=true; chargerVoix();
 }
 
 function arreterVoix(){
@@ -409,6 +426,7 @@ function arreterVoix(){
 
 function boucleVolume(analyse, jeton){
   arreterAnimParole(); // on remplace le mouvement aléatoire par le vrai volume
+  cancelAnimationFrame(rafVoix);
   const buf = new Float32Array(analyse.fftSize);
   const tick=()=>{
     if(jeton!==jetonVoix || etat!=='parle') return;
@@ -502,6 +520,31 @@ async function jouerServeur(texte, voix, jeton){
   await jouerBlob(blob, jeton, estFish ? Math.max(0.5, Math.min(1.5, reglages.vitesse||1)) : 1);
 }
 
+// ---- Explication en français + darija (modes « une voix » / « deux voix ») ----
+// cleVoix : 'fish1' | 'fish2' (marocaines) ou 'fishfr' (voix française standard de Fish)
+async function blobFish(texte, cleVoix){
+  if(serveurVoix){
+    const r = await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:texte,voice:cleVoix,rate:0})});
+    if(!r.ok){ let m='erreur '+r.status; try{ m=(await r.json()).error||m; }catch{} throw new Error(m); }
+    return await r.blob();
+  }
+  return await audioFish(texte, cleVoix);
+}
+async function jouerAvecFrancais(explication, arabe, choix, mode, jeton){
+  const voixMaroc = choix.replace(/^(srv:|fish:)/,''); // fish1 ou fish2
+  const vit = Math.max(0.5, Math.min(1.5, reglages.vitesse||1));
+  if(mode==='une'){
+    const blob = await blobFish(explication+' '+arabe, voixMaroc);
+    await jouerBlob(blob, jeton, vit);
+    return;
+  }
+  // deux voix : les deux audios sont préparés en même temps, puis lus l'un après l'autre
+  const [b1, b2] = await Promise.all([blobFish(explication,'fishfr'), blobFish(arabe, voixMaroc)]);
+  await jouerBlob(b1, jeton, vit);
+  if(jeton!==jetonVoix) return;
+  await jouerBlob(b2, jeton, vit);
+}
+
 // ---- Voix du navigateur (secours) ----
 function parlerNavigateur(texteArabe, textePhon, jeton){
   return new Promise(resolve=>{
@@ -521,13 +564,26 @@ function parlerNavigateur(texteArabe, textePhon, jeton){
 }
 
 // ---- Point d'entrée unique ----
-async function parler(texteArabe, textePhon){
+async function parler(texteArabe, textePhon, explication){
   arreterVoix();
   const jeton = jetonVoix;
   await new Promise(async resolve=>{
     resoudreVoix = resolve;
     try{
       const choix = reglages.voix||'';
+      // Explication en français avant le darija (réglage « Voix du tuteur »)
+      const modeFr = modeVoixTuteur();
+      const expl = String(explication||'').trim();
+      const arabeTxt = String(texteArabe||'').trim();
+      const fishChoisi = /^(srv:|fish:)fish\d$/.test(choix);
+      const fishPossible = (serveurVoix && fishDispo) || fishDirect();
+      if(modeFr!=='darija' && expl && arabeTxt && fishChoisi && fishPossible && Date.now()>=fishHorsService){
+        try{ await jouerAvecFrancais(expl, arabeTxt, choix, modeFr, jeton); return resolve(); }
+        catch(e){
+          if(jeton!==jetonVoix) return resolve();
+          toast('Explication en français indisponible ('+(e.message||e)+') : darija seulement.', 5000);
+        }
+      }
       if(serveurVoix && choix.startsWith('srv:') && Date.now()>=serveurHorsService){
         const texte = (texteArabe||textePhon||'').trim();
         if(!texte) return resolve();
@@ -569,7 +625,7 @@ async function parler(texteArabe, textePhon){
 }
 
 /* ---------- Tuteur (Groq LLM, réponse JSON) ---------- */
-const systeme = () => { const ch = reglages.chiffres; const T = ch ? 'ta3ban' : "ta'ban"; return `Tu es Darij, un partenaire de conversation et tuteur de darija marocaine (darija standard de Casablanca/Rabat, pas celle de Fès). L'élève est francophone, niveau presque zéro.
+const systeme = () => { const ch = reglages.chiffres; const T = ch ? 'ta3ban' : "ta'ban"; const parleFr = modeVoixTuteur()!=='darija'; return `Tu es Darij, un partenaire de conversation et tuteur de darija marocaine (darija standard de Casablanca/Rabat, pas celle de Fès). L'élève est francophone, niveau presque zéro.
 
 RÈGLE N°1 : TU RÉPONDS À L'ÉLÈVE, TU NE LE RÉPÈTES JAMAIS.
 Tu es la personne en face de lui, comme un ami. Quand il dit quelque chose (même en français), tu réagis à ce qu'il vient de dire : tu réponds à sa question ou tu réagis à son information, en darija simple. Ensuite, seulement si c'est naturel, tu poses UNE petite question liée à ce qu'il a dit.
@@ -581,12 +637,13 @@ Tu es la personne en face de lui, comme un ami. Quand il dit quelque chose (mêm
 Style : chaleureux, un peu drôle, 1 à 2 phrases courtes en darija maximum, une seule idée à la fois, vocabulaire courant du quotidien.
 ${ch ? 'Phonétique : lettres latines lisibles par un francophone, avec les chiffres usuels du darija écrit : 3 (ع), 7 (ح), 9 (ق), plus kh (خ), gh (غ), ch (ش), ou (و). Ex : ta3ban, 7lib, 9ahwa.' : "Phonétique : lettres latines lisibles par un francophone, SANS AUCUN chiffre (jamais de 3, 7 ou 9). Utilise : kh (خ), gh (غ), h (ح et ه), q (ق), ch (ش), ou (و), et une apostrophe pour ع (ex : ta'ban)."}
 Si l'élève fait une erreur en darija, corrige-la gentiment dans "correction".
-
+${parleFr ? `
+EXPLICATION ORALE : le champ "explication_orale" est une phrase française très courte (12 mots maximum) que la voix dit à haute voix JUSTE AVANT ta réponse en darija. Utilise-le quand l'élève demande comment dire quelque chose (ex : « Pour dire « merci », on dit : ») ou pour introduire une correction (ex : « Attention, on dit plutôt : »). Elle doit mener directement à ta phrase en darija. Pour une simple conversation, laisse-le vide (""). N'y mets jamais de darija.\n` : ''}
 Exemples (à imiter pour le fond, pas à recopier) :
 Élève : "Je suis fatigué et toi ?" →
-{"phonetique":"Ana mzyan, hamdoulillah. Wach bghiti atay ?","arabe":"أنا مزيان، الحمد لله. واش بغيتي أتاي؟","francais":"Moi ça va, grâce à Dieu. Tu veux un thé ?","traduction_eleve":"Ana ${T}, w nta ?","correction":"","mot":{"phonetique":"${T}","arabe":"تَعْبَان","francais":"fatigué"}}
+{"phonetique":"Ana mzyan, hamdoulillah. Wach bghiti atay ?","arabe":"أنا مزيان، الحمد لله. واش بغيتي أتاي؟","francais":"Moi ça va, grâce à Dieu. Tu veux un thé ?","traduction_eleve":"Ana ${T}, w nta ?","correction":"",${parleFr?'"explication_orale":"",':''}"mot":{"phonetique":"${T}","arabe":"تَعْبَان","francais":"fatigué"}}
 Élève : "Comment on dit merci ?" →
-{"phonetique":"Choukran ! Goul-ha ma'aya : choukran bzaf.","arabe":"شكرا! قولها معايا: شكرا بزاف.","francais":"Merci ! Dis-le avec moi : merci beaucoup.","traduction_eleve":"Choukran.","correction":"","mot":{"phonetique":"choukran","arabe":"شُكْرًا","francais":"merci"}}
+{"phonetique":"Choukran ! Goul-ha ma'aya : choukran bzaf.","arabe":"شكرا! قولها معايا: شكرا بزاف.","francais":"Merci ! Dis-le avec moi : merci beaucoup.","traduction_eleve":"Choukran.","correction":"",${parleFr?'"explication_orale":"Pour dire « merci », on dit :",':''}"mot":{"phonetique":"choukran","arabe":"شُكْرًا","francais":"merci"}}
 
 Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, de cette forme :
 {
@@ -595,7 +652,7 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, de cette forme
  "francais": "traduction française de ta réponse",
  "traduction_eleve": "si l'élève a dit une phrase en français : comment la dire en darija (phonétique), sinon chaîne vide",
  "correction": "si l'élève a fait une erreur en darija : correction courte expliquée en français, sinon chaîne vide",
- "mot": {"phonetique":"un mot clé de ta réponse à retenir","arabe":"le même mot en écriture arabe avec voyelles","francais":"sa traduction"}
+${parleFr?' "explication_orale": "phrase française très courte dite avant le darija (voir EXPLICATION ORALE), sinon chaîne vide",\n':''} "mot": {"phonetique":"un mot clé de ta réponse à retenir","arabe":"le même mot en écriture arabe avec voyelles","francais":"sa traduction"}
 }`; };
 let historique = LS.get('kifkif_vocal_historique_v2', []);
 
@@ -688,6 +745,7 @@ function afficherReponse(rep){
   $('#stDarij').textContent = rep.phonetique || '';
   $('#stFr').textContent = rep.francais || '';
   const c=$('#stCorrection'); let html='';
+  if(rep.explication_orale && modeVoixTuteur()!=='darija') html+=`<div><b>Explication :</b> ${esc(rep.explication_orale)}</div>`;
   if(rep.traduction_eleve) html+=`<div><b>En darija :</b> ${esc(rep.traduction_eleve)}</div>`;
   if(rep.correction) html+=`<div><b>Correction :</b> ${esc(rep.correction)}</div>`;
   c.innerHTML=html; c.style.display = html?'block':'none';
@@ -706,16 +764,19 @@ async function envoyer(texte, cache=false){
   try{
     const rep = await appelerTuteur(texte);
     afficherReponse(rep);
-    await parler(rep.arabe, rep.phonetique);
+    await parler(rep.arabe, rep.phonetique, rep.explication_orale);
   }catch(e){ toast(e.message||String(e)); setEtat('repos'); }
   finally{ occupe=false; if(etat==='reflexion') setEtat('repos'); }
 }
 
 /* ---------- Micro : enregistrement + détection de silence + Groq Whisper ---------- */
 let flux=null, ctxAudio=null, analyseur=null, enregistreur=null, morceaux=[], boucleId=null;
+function oublierMicro(){ try{ if(flux) flux.getTracks().forEach(t=>t.stop()); }catch{} flux=null; }
+let debutEnreg=0;
 async function demarrerEcoute(){
   if(occupe) return;
   arreterVoix();
+  { const piste = flux && flux.getAudioTracks()[0]; if(flux && (!piste || piste.readyState!=='live')) oublierMicro(); } // micro coupé entre-temps : on le rouvre
   if(!reglages.cle){ ouvrirPanneau('#panReglages'); toast('Ajoute ta clé Groq pour utiliser le micro.'); return; }
   try{
     flux = flux || await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
@@ -731,7 +792,7 @@ async function demarrerEcoute(){
   morceaux=[];
   enregistreur.ondataavailable = e=>{ if(e.data.size) morceaux.push(e.data); };
   enregistreur.onstop = ()=> traiterEnregistrement(enregistreur.mimeType||mime||'audio/webm');
-  enregistreur.start(250);
+  enregistreur.start(250); debutEnreg=performance.now();
   setEtat('ecoute');
 
   const buf = new Float32Array(analyseur.fftSize);
@@ -767,6 +828,7 @@ async function traiterEnregistrement(mime){
   if(enregistreur && enregistreur._annule) return;
   const blob = new Blob(morceaux,{type:mime});
   if(blob.size<1500){ setEtat('repos'); return; }
+  if(performance.now()-debutEnreg<600){ setEtat('repos'); toast('Enregistrement trop court, réessaie.',2500); return; }
   setEtat('reflexion');
   try{
     const ext = mime.includes('mp4')?'m4a': mime.includes('ogg')?'ogg':'webm';
@@ -785,7 +847,14 @@ async function traiterEnregistrement(mime){
       const nouveau = await trouverModeleSTT();
       if(nouveau && nouveau!==reglages.modeleSTT){ reglages.modeleSTT=nouveau; sauverReglages(); toast('Modèle vocal ajusté : '+nouveau,3000); r = await envoyerSTT(); }
     }
-    if(!r.ok) throw new Error('Transcription ('+r.status+') : '+(await r.text()).slice(0,140));
+    if(!r.ok){
+      const t = await r.text();
+      if(r.status===400 && /media|file/i.test(t)){
+        oublierMicro(); // le micro sera rouvert proprement au prochain essai
+        throw new Error('Le micro a mal enregistré ('+Math.max(1,Math.round(blob.size/1024))+' Ko, '+mime+'). Réessaie : je rouvre le micro.');
+      }
+      throw new Error('Transcription ('+r.status+') : '+t.slice(0,140));
+    }
     let texte = ((await r.json()).text||'').trim();
     if(!texte){ setEtat('repos'); toast("Je n'ai pas compris, réessaie."); return; }
     if(reglages.ecritureDictee==='latin') texte = await versLettresLatines(texte);
@@ -852,7 +921,7 @@ function ouvrirPanneau(sel){ $('#voile').style.display='block'; $(sel).classList
 function fermerPanneaux(){ $('#voile').style.display='none'; document.querySelectorAll('.panneau').forEach(p=>p.classList.remove('ouvert')); }
 function remplirReglages(){
   $('#cleGroq').value=reglages.cle; $('#codeRelais').value=reglages.codeRelais||''; $('#modeleLLM').value=reglages.modeleLLM; $('#modeleSTT').value=reglages.modeleSTT;
-  $('#ecritureDictee').value=reglages.ecritureDictee||'arabe'; $('#langueMicro').value=reglages.langueMicro||'ar';
+  $('#ecritureDictee').value=reglages.ecritureDictee||'arabe'; $('#langueMicro').value=reglages.langueMicro||'ar'; $('#voixTuteur').value=modeVoixTuteur();
   $('#vitesse').value=reglages.vitesse; $('#vitesseVal').textContent=reglages.vitesse;
   $('#silence').value=reglages.silence; $('#silenceVal').textContent=reglages.silence;
   $('#afficherArabe').checked=reglages.afficherArabe; chargerVoix();
@@ -886,7 +955,7 @@ $('#silence').oninput = e=>$('#silenceVal').textContent=e.target.value;
 $('#btnSauverReglages').onclick = ()=>{
   reglages.cle=$('#cleGroq').value.trim(); reglages.codeRelais=$('#codeRelais').value.trim(); reglages.modeleLLM=$('#modeleLLM').value.trim()||'llama-3.3-70b-versatile';
   reglages.modeleSTT=$('#modeleSTT').value.trim()||'whisper-large-v3'; reglages.voix=$('#voix').value; reglages._voixChoisie=true;
-  reglages.ecritureDictee=$('#ecritureDictee').value; reglages.langueMicro=$('#langueMicro').value;
+  reglages.ecritureDictee=$('#ecritureDictee').value; reglages.langueMicro=$('#langueMicro').value; reglages.voixTuteur=$('#voixTuteur').value;
   reglages.vitesse=+$('#vitesse').value; reglages.silence=+$('#silence').value; reglages.afficherArabe=$('#afficherArabe').checked;
   sauverReglages(); appliquerAffichage(); fermerPanneaux(); toast('Réglages enregistrés',1500);
 };
@@ -898,7 +967,7 @@ $('#btnMicro').onclick = toucherMicro;
 $('#capsules').onclick = toucherMicro;
 $('#btnRejouer').onclick = ()=>{ debloquerAudio(); parler(motCourant.arabe, motCourant.phonetique); };
 $('#btnSauver').onclick = basculerCarnet;
-$('#stDarij').onclick = ()=>{ debloquerAudio(); if(derniereReponse) parler(derniereReponse.arabe, derniereReponse.phonetique); };
+$('#stDarij').onclick = ()=>{ debloquerAudio(); if(derniereReponse) parler(derniereReponse.arabe, derniereReponse.phonetique, derniereReponse.explication_orale); };
 $('#btnEnvoyer').onclick = ()=>{ debloquerAudio(); envoyer($('#texte').value); };
 $('#texte').addEventListener('keydown',e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); envoyer($('#texte').value); } });
 function ajusterTexte(){ const t=$('#texte'); t.style.height='auto'; t.style.height=Math.min(120,t.scrollHeight)+'px'; }
