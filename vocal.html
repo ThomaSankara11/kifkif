@@ -213,9 +213,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <input id="modeleSTT" placeholder="whisper-large-v3">
   </div>
   <div class="champ">
-    <label for="cleFish">Clé API Fish Audio (facultatif, pour l'iPhone)</label>
-    <input id="cleFish" type="password" placeholder="colle ta clé Fish ici" autocomplete="off" autocapitalize="off" spellcheck="false">
-    <small>Donne les voix marocaines Fish 1 et Fish 2 sans le PC. Reste uniquement dans ce téléphone. Sur le PC, inutile : la clé est lue dans reglages-fish.txt.</small>
+    <label for="codeRelais">Code secret du relais Fish (facultatif, pour l'iPhone)</label>
+    <input id="codeRelais" type="password" placeholder="colle ton code secret ici" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <small>Donne les voix marocaines Fish 1 et Fish 2 sans le PC, via ton relais Cloudflare. Reste uniquement dans ce téléphone. Sur le PC, inutile.</small>
   </div>
   <div class="champ">
     <label for="voix">Voix</label>
@@ -259,7 +259,7 @@ const LS = {
 /* ---------- Réglages ---------- */
 const reglages = Object.assign({
   cle:'', modeleLLM:'llama-3.3-70b-versatile', modeleSTT:'whisper-large-v3',
-  cleFish:'', voix:'', vitesse:0.9, afficherArabe:false, silence:1.3, auto:false, chiffres:true
+  codeRelais:'', voix:'', vitesse:0.9, afficherArabe:false, silence:1.3, auto:false, chiffres:true
 }, LS.get('kifkif_vocal_reglages', {}));
 function sauverReglages(){ LS.set('kifkif_vocal_reglages', reglages); }
 
@@ -343,11 +343,11 @@ function chargerVoix(){
     ? (fishDispo ? 'Jamal, Mouna et Fish 1/2 : voix marocaines (serveur local de Kif-Kif). Si Fish ne répond pas, Jamal prend le relais. Les autres : voix du navigateur, en secours.'
                  : 'Jamal et Mouna : voix marocaines (serveur local de Kif-Kif). Les autres : voix du navigateur, en secours.')
     : fishDirect()
-      ? 'Fish 1 et Fish 2 : voix marocaines (Fish Audio, avec ta clé). Si Fish ne répond pas, voix du téléphone à la place.'
-      : 'Sur iPhone : colle ta clé Fish ci-dessus pour avoir une voix marocaine. Sur PC : ouvre http://localhost:8000/vocal.html (lance start.bat) pour Jamal.';
+      ? 'Fish 1 et Fish 2 : voix marocaines (Fish Audio, via ton relais). Si Fish ne répond pas, voix du téléphone à la place.'
+      : 'Sur iPhone : colle le code secret du relais ci-dessus pour avoir une voix marocaine. Sur PC : ouvre http://localhost:8000/vocal.html (lance start.bat) pour Jamal.';
 }
 function score(v){ const l=v.lang.toLowerCase(); return l==='ar-ma'?3: l.startsWith('ar')?2: l.startsWith('fr')?1:0; }
-function fishDirect(){ return !serveurVoix && !!reglages.cleFish && /^https?:$/.test(location.protocol); }
+function fishDirect(){ return !serveurVoix && !!reglages.codeRelais && /^https?:$/.test(location.protocol); }
 function voixChoisie(){
   const nom = reglages.voix||'';
   if(nom && !nom.startsWith('srv:') && !nom.startsWith('fish:')){ const v=voixDispo.find(x=>x.name===nom); if(v) return v; }
@@ -426,36 +426,32 @@ async function jouerBlob(blob, jeton, vitesseLecture){
   } finally { a.onended=a.onerror=a.onpause=null; URL.revokeObjectURL(url); }
 }
 
-// ---- Voix Fish appelée directement (iPhone, sans le PC) ----
-const FISH_VOIX = {fish1:'8ad316c0e3aa4810a471e1bca511cd32', fish2:'48b04c7c132e46d083b810ea09f90131'};
-async function cleCacheFish(ref, texte){
+// ---- Voix Fish via le relais Cloudflare (iPhone, sans le PC) ----
+// Fish refuse les appels directs depuis une page web : on passe par un petit relais perso,
+// qui garde la clé Fish. Ici, seul le code secret du relais est saisi sur le téléphone.
+const RELAIS_URL = 'https://kifkif-relais.mojitoclip.workers.dev/';
+async function cleCacheFish(voix, texte){
   try{
-    const h = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(ref+'|'+texte));
+    const h = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(voix+'|'+texte));
     return 'https://kifkif.local/fish/'+[...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')+'.mp3';
   }catch{ return null; }
 }
 async function audioFish(texte, voix){
-  const ref = FISH_VOIX[voix]; if(!ref) throw new Error('voix Fish inconnue');
-  const cle = await cleCacheFish(ref, texte);
+  const cle = await cleCacheFish(voix, texte);
   let cache=null;
   try{ if(cle && 'caches' in window){ cache = await caches.open('kifkif-fish'); const r = await cache.match(cle); if(r) return await r.blob(); } }catch{}
-  const corps = JSON.stringify({text:texte, format:'mp3', reference_id:ref});
-  const appel = avecModele => fetch('https://api.fish.audio/v1/tts',{method:'POST',
-    headers: Object.assign({'Authorization':'Bearer '+reglages.cleFish,'Content-Type':'application/json'}, avecModele?{'model':'s2.1-pro-free'}:{}),
-    body:corps});
   let r;
-  try{ r = await appel(true); }
-  catch(e){
-    // Le navigateur a bloqué l'appel (sécurité du site Fish). Dernier essai sans l'en-tête « model ».
-    try{ r = await appel(false); }
-    catch{ throw new Error('Fish refuse les appels directs depuis une page web (sécurité de leur site)'); }
-  }
+  try{
+    r = await fetch(RELAIS_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','X-Kifkif-Code':reglages.codeRelais},
+      body:JSON.stringify({text:texte, voice:voix})});
+  }catch{ throw new Error('relais injoignable (réseau ?)'); }
   if(!r.ok){
-    const m = {401:'clé Fish refusée : vérifie-la dans les réglages', 402:'Fish n\'est plus gratuit pour cette voix', 403:'Fish n\'est plus gratuit pour cette voix', 429:'trop de demandes à Fish'}[r.status] || ('erreur Fish '+r.status);
+    let m='erreur '+r.status; try{ m=(await r.json()).error||m; }catch{}
     throw new Error(m);
   }
   const blob = await r.blob();
-  if(blob.size<1000) throw new Error('Fish a renvoyé un audio vide');
+  if(blob.size<1000) throw new Error('audio vide');
   try{ if(cache && cle) await cache.put(cle, new Response(blob,{headers:{'Content-Type':'audio/mpeg'}})); }catch{}
   return blob;
 }
@@ -781,7 +777,7 @@ $('#listeCarnet').addEventListener('click',e=>{
 function ouvrirPanneau(sel){ $('#voile').style.display='block'; $(sel).classList.add('ouvert'); if(sel==='#panCarnet') rendreCarnet(); if(sel==='#panReglages') remplirReglages(); }
 function fermerPanneaux(){ $('#voile').style.display='none'; document.querySelectorAll('.panneau').forEach(p=>p.classList.remove('ouvert')); }
 function remplirReglages(){
-  $('#cleGroq').value=reglages.cle; $('#cleFish').value=reglages.cleFish||''; $('#modeleLLM').value=reglages.modeleLLM; $('#modeleSTT').value=reglages.modeleSTT;
+  $('#cleGroq').value=reglages.cle; $('#codeRelais').value=reglages.codeRelais||''; $('#modeleLLM').value=reglages.modeleLLM; $('#modeleSTT').value=reglages.modeleSTT;
   $('#vitesse').value=reglages.vitesse; $('#vitesseVal').textContent=reglages.vitesse;
   $('#silence').value=reglages.silence; $('#silenceVal').textContent=reglages.silence;
   $('#afficherArabe').checked=reglages.afficherArabe; chargerVoix();
@@ -807,11 +803,11 @@ $('#btnReglages').onclick = ()=>ouvrirPanneau('#panReglages');
 $('#btnCarnet').onclick = ()=>ouvrirPanneau('#panCarnet');
 $('#voile').onclick = fermerPanneaux;
 document.querySelectorAll('[data-fermer]').forEach(b=>b.onclick=fermerPanneaux);
-$('#cleFish').oninput = e=>{ reglages.cleFish=e.target.value.trim(); chargerVoix(); };
+$('#codeRelais').oninput = e=>{ reglages.codeRelais=e.target.value.trim(); chargerVoix(); };
 $('#vitesse').oninput = e=>$('#vitesseVal').textContent=e.target.value;
 $('#silence').oninput = e=>$('#silenceVal').textContent=e.target.value;
 $('#btnSauverReglages').onclick = ()=>{
-  reglages.cle=$('#cleGroq').value.trim(); reglages.cleFish=$('#cleFish').value.trim(); reglages.modeleLLM=$('#modeleLLM').value.trim()||'llama-3.3-70b-versatile';
+  reglages.cle=$('#cleGroq').value.trim(); reglages.codeRelais=$('#codeRelais').value.trim(); reglages.modeleLLM=$('#modeleLLM').value.trim()||'llama-3.3-70b-versatile';
   reglages.modeleSTT=$('#modeleSTT').value.trim()||'whisper-large-v3'; reglages.voix=$('#voix').value; reglages._voixChoisie=true;
   reglages.vitesse=+$('#vitesse').value; reglages.silence=+$('#silence').value; reglages.afficherArabe=$('#afficherArabe').checked;
   sauverReglages(); appliquerAffichage(); fermerPanneaux(); toast('Réglages enregistrés',1500);
