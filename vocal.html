@@ -1004,6 +1004,22 @@ function amorceWhisper(langue){
   if(t) a += ' ' + t.slice(0,160);
   return a;
 }
+/* Phrases que Whisper « invente » quand il entend mal (sous-titres de vidéos, formules de politesse).
+   « fort » : personne ne dit ça en parlant au tuteur → on demande de répéter.
+   « doute » : phrase possible mais suspecte quand c'est TOUT ce qu'il a compris → pas d'envoi automatique. */
+function normFantome(t){
+  return String(t||'').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+    .replace(/[^\u0621-\u064A0-9a-zA-Z ]/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+}
+const FANTOMES_FORTS = ['ترجمه نانسي قنقر','نانسي قنقر','اشتركوا في القناه','اشترك في القناه','لا تنسوا الاشتراك','لا تنسي الاشتراك','لا تنس الاشتراك','شكرا علي المشاهده','شكرا للمشاهده','شكرا لكم علي المشاهده','تابعونا علي','مترجم من'].map(normFantome);
+const FANTOMES_DOUTE = ['اهلا بكم','اهلا بيكم','مرحبا بكم','سبحان الله','شكرا لكم','شكرا جزيلا','الحمد لله رب العالمين'].map(normFantome);
+function verdictFantome(texte){
+  const n=normFantome(texte);
+  if(!n) return null;
+  if(FANTOMES_FORTS.some(f=>n.includes(f))) return 'fort';
+  if(FANTOMES_DOUTE.includes(n)) return 'doute';
+  return null;
+}
 async function traiterEnregistrement(mime){
   if(enregistreur && enregistreur._annule) return;
   const blob = new Blob(morceaux,{type:mime});
@@ -1037,12 +1053,16 @@ async function traiterEnregistrement(mime){
     }
     let texte = ((await r.json()).text||'').trim();
     if(!texte){ setEtat('repos'); toast("Je n'ai pas compris, réessaie."); return; }
+    const verdict = (reglages.langueMicro||'ar')==='fr' ? null : verdictFantome(texte);
+    if(verdict==='fort'){ setEtat('repos'); toast("Je n'ai pas bien entendu, répète.",3000); return; }
     if(reglages.ecritureDictee==='latin') texte = await versLettresLatines(texte);
-    if(reglages.auto){ setEtat('repos'); envoyer(texte); }
+    if(reglages.auto && verdict!=='doute'){ setEtat('repos'); envoyer(texte); }
     else{
       setEtat('repos');
       $('#texte').value=texte; ajusterTexte(); $('#texte').focus();
-      $('#aide').textContent='Relis, corrige si besoin, puis Entrée';
+      $('#aide').textContent = verdict==='doute'
+        ? "Pas sûr d'avoir bien entendu : redis-le si ce n'est pas ça, ou corrige, puis Entrée"
+        : 'Relis, corrige si besoin, puis Entrée';
     }
   }catch(e){ toast(e.message||String(e)); setEtat('repos'); }
 }
